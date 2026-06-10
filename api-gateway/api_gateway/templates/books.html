@@ -1,0 +1,176 @@
+﻿{% extends "base.html" %}
+{% block title %}Quản lý Sách{% endblock %}
+{% block page_title %}<i class="bi bi-book"></i> Quản lý Sách{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <h3><i class="bi bi-plus-circle"></i> Thêm sách mới</h3>
+  <div class="form-row">
+    <div class="form-group"><label>Tên sách</label><input id="f-title" placeholder="Python Cơ Bản"></div>
+    <div class="form-group"><label>Tác giả</label><input id="f-author" placeholder="Nguyễn Văn A"></div>
+    <div class="form-group"><label>Giá (đ)</label><input id="f-price" type="number" placeholder="150000"></div>
+    <div class="form-group"><label>Tồn kho</label><input id="f-stock" type="number" placeholder="10"></div>
+    <div class="form-group"><label>URL ảnh bìa</label><input id="f-image" placeholder="https://covers.openlibrary.org/...jpg"></div>
+  </div>
+  <button class="btn btn-primary" onclick="addBook()"><i class="bi bi-plus-circle"></i> Thêm sách</button>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <h3>Danh sách sách (<span id="book-count">0</span>)</h3>
+    <div class="search-box"><i class="bi bi-search"></i><input id="search" placeholder="Tìm kiếm..." oninput="filterBooks()"></div>
+  </div>
+  <table>
+    <thead><tr><th>ID</th><th>Ảnh</th><th>Tên sách</th><th>Tác giả</th><th>Giá</th><th>Tồn kho</th><th>Thao tác</th></tr></thead>
+    <tbody id="book-table"><tr><td colspan="7" style="text-align:center;padding:20px;color:#888">Đang tải...</td></tr></tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="editBookModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="bi bi-pencil-square"></i> Cập nhật sách</h3>
+      <button class="close-btn" onclick="closeEditModal()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Tên sách</label><input id="edit-title"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Tác giả</label><input id="edit-author"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Giá (đ)</label><input id="edit-price" type="number"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Tồn kho</label><input id="edit-stock" type="number"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>URL ảnh bìa</label><input id="edit-image"></div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#e5e7eb;color:#374151" onclick="closeEditModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveEditBook()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let allBooks = [];
+
+function loadBooks() {
+  fetch('/api/books/').then(r => r.json()).then(data => {
+    allBooks = Array.isArray(data) ? data : [];
+    document.getElementById('book-count').textContent = allBooks.length;
+    renderBooks(allBooks);
+  }).catch(() => showToast('Không tải $ược danh sách sách', false));
+}
+
+function renderBooks(books) {
+  const tbody = document.getElementById('book-table');
+  if (!books.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"></div>Chưa có sách nào</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = books.map(b => {
+    const price = Number(b.price).toLocaleString('vi-VN');
+    const stockTag = b.stock > 0 ? 'tag-blue' : 'tag-red';
+    const imgUrl = b.image || b.imageUrl;
+    const imageCell = imgUrl
+      ? '<img src="' + imgUrl + '" alt="' + b.title + '" style="width:56px;height:84px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">'
+      : '<div style="width:56px;height:84px;border-radius:8px;border:1px dashed #d1d5db;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;">No image</div>';
+    return '<tr>' +
+      '<td style="color:#888">#' + b.id + '</td>' +
+      '<td>' + imageCell + '</td>' +
+      '<td><strong>' + b.title + '</strong></td>' +
+      '<td>' + b.author + '</td>' +
+      '<td><span class="tag tag-green">' + price + ' $</span></td>' +
+      '<td><span class="tag ' + stockTag + '">' + b.stock + '</span></td>' +
+      '<td>' +
+      '<button class="btn btn-primary btn-sm" onclick="editBook(' + b.id + ')">Sửa</button> ' +
+      '<button class="btn btn-danger btn-sm" onclick="deleteBook(' + b.id + ')"> Xóa</button>' +
+      '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function filterBooks() {
+  const q = document.getElementById('search').value.toLowerCase();
+  renderBooks(allBooks.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)));
+}
+
+function addBook() {
+  const imgVal = document.getElementById('f-image').value.trim();
+  const body = {
+    title: document.getElementById('f-title').value.trim(),
+    author: document.getElementById('f-author').value.trim(),
+    price: document.getElementById('f-price').value,
+    stock: document.getElementById('f-stock').value,
+    image: imgVal,
+    imageUrl: imgVal,
+  };
+  if (!body.title || !body.author || !body.price || !body.stock) {
+    showToast('Vui lòng $iền $ầy $ủ thông tin', false); return;
+  }
+  fetch('/api/books/', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})
+    .then(r => { if (!r.ok) return r.json().then(e => { throw e; }); return r.json(); })
+    .then(() => {
+      showToast(' Thêm sách thành công!');
+      loadBooks();
+      ['f-title', 'f-author', 'f-price', 'f-stock', 'f-image'].forEach(id => document.getElementById(id).value = '');
+    })
+    .catch(e => showToast('Lỗi: ' + JSON.stringify(e), false));
+}
+
+let currentEditBookId = null;
+
+function editBook(id) {
+  const book = allBooks.find(function(item) { return item.id === id; });
+  if (!book) {
+    showToast('Không tìm thấy sách', false);
+    return;
+  }
+  currentEditBookId = id;
+  document.getElementById('edit-title').value = book.title || '';
+  document.getElementById('edit-author').value = book.author || '';
+  document.getElementById('edit-price').value = book.price || '';
+  document.getElementById('edit-stock').value = book.stock || '';
+  document.getElementById('edit-image').value = book.image || book.imageUrl || '';
+  document.getElementById('editBookModal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editBookModal').classList.remove('show');
+  currentEditBookId = null;
+}
+
+function saveEditBook() {
+  if (!currentEditBookId) return;
+  const imgVal = document.getElementById('edit-image').value.trim();
+  const body = {
+    title: document.getElementById('edit-title').value.trim(),
+    author: document.getElementById('edit-author').value.trim(),
+    price: document.getElementById('edit-price').value,
+    stock: document.getElementById('edit-stock').value,
+    image: imgVal,
+    imageUrl: imgVal,
+  };
+
+  if (!body.title || !body.author || !body.price || !body.stock) {
+    showToast('Vui lòng $iền $ầy $ủ thông tin', false);
+    return;
+  }
+
+  fetch('/api/books/' + currentEditBookId + '/', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  })
+    .then(r => { if (!r.ok) return r.json().then(e => { throw e; }); return r.json(); })
+    .then(() => {
+      showToast('Cập nhật sách thành công');
+      closeEditModal();
+      loadBooks();
+    })
+    .catch(e => showToast('Lỗi: ' + JSON.stringify(e), false));
+}
+
+function deleteBook(id) {
+  if (!confirm('Xóa sách này?')) return;
+  fetch('/api/books/' + id + '/', {method: 'DELETE'})
+    .then(() => { showToast(' Đã xóa sách'); loadBooks(); })
+    .catch(() => showToast('Lỗi khi xóa', false));
+}
+
+loadBooks();
+{% endblock %}

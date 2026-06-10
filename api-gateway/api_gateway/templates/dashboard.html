@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div>
+        <div class="stat-val" id="cnt-books">—</div>
+        <div class="stat-label">Sách</div>
+      </div>
+      <div class="stat-icon"><i class="bi bi-book"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div>
+        <div class="stat-val" id="cnt-customers">—</div>
+        <div class="stat-label">Khách hàng</div>
+      </div>
+      <div class="stat-icon"><i class="bi bi-people"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div>
+        <div class="stat-val" id="cnt-orders">—</div>
+        <div class="stat-label">Đơn hàng</div>
+      </div>
+      <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div>
+        <div class="stat-val" id="cnt-payments">—</div>
+        <div class="stat-label">Thanh toán</div>
+      </div>
+      <div class="stat-icon"><i class="bi bi-credit-card"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div>
+        <div class="stat-val" id="cnt-shipments">—</div>
+        <div class="stat-label">Vận chuyển</div>
+      </div>
+      <div class="stat-icon"><i class="bi bi-truck"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div>
+        <div class="stat-val" id="cnt-reviews">—</div>
+        <div class="stat-label">Đánh giá</div>
+      </div>
+      <div class="stat-icon"><i class="bi bi-star"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-header"><h3><i class="bi bi-heart-pulse text-danger"></i> Trạng thái 12 Services</h3></div>
+  <table>
+    <thead><tr><th>Service</th><th>URL</th><th>Trạng thái</th></tr></thead>
+    <tbody id="service-table"><tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted)"><i class="bi bi-arrow-repeat"></i> Đang kiểm tra...</td></tr></tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+const serviceMap = {
+  customers: 8001, books: 8002, carts: 8003, staff: 8004,
+  managers: 8005, categories: 8006, orders: 8007, shipments: 8008,
+  payments: 8009, reviews: 8010, recommendations: 8011
+};
+const countMap = {
+  books: 'cnt-books', customers: 'cnt-customers', orders: 'cnt-orders',
+  payments: 'cnt-payments', shipments: 'cnt-shipments', reviews: 'cnt-reviews'
+};
+
+// Load stats
+Object.keys(countMap).forEach(key => {
+  fetch(`/api/${key}/`).then(r=>r.json()).then(d=>{
+    const val = Array.isArray(d) ? d.length : (d.length ?? '?');
+    const el = document.getElementById(countMap[key]);
+    if(el) el.textContent = val;
+  }).catch(()=>{});
+});
+
+// Load health table
+fetch('/health/').then(r=>r.json()).then(d=>{
+  const tbody = document.getElementById('service-table');
+  tbody.innerHTML = Object.entries(d.services).map(([name, status]) => {
+    const port = serviceMap[name] || '?';
+    const tag = status === 'up'
+      ? '<span class="tag tag-green"><i class="bi bi-check-circle-fill"></i> up</span>'
+      : '<span class="tag tag-red"><i class="bi bi-x-circle-fill"></i> down</span>';
+    return `<tr><td><strong>${name}</strong></td><td style="color:var(--muted);font-size:13px"><i class="bi bi-link-45deg"></i> localhost:${port}</td><td>${tag}</td></tr>`;
+  }).join('');
+}).catch(()=>{ document.getElementById('service-table').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--red)"><i class="bi bi-exclamation-triangle-fill"></i> Không thể kết nối</td></tr>'; });
+{% endblock %}

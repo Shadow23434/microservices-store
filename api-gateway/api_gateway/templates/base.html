@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Store{% endblock %} — Microservice</title>
+<!-- Bootstrap Icons Font -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #4F46E5; --primary-dark: #4338CA; --sidebar-w: 240px;
+    --bg: #F3F4F6; --white: #FFFFFF; --text: #1F2937; --muted: #6B7280;
+    --green: #10B981; --red: #EF4444; --orange: #F59E0B;
+    --border: #E5E7EB;
+    --radius: 12px; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: var(--sidebar-w); background: #111827; color: #F9FAFB; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; transition: all 0.3s ease; }
+  .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+  .sidebar-logo i { font-size: 24px; color: var(--primary); }
+  .sidebar-logo h1 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -0.025em; }
+  .sidebar-logo p { font-size: 12px; opacity: 0.7; margin-top: 4px; color: #9CA3AF; }
+  .sidebar nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+  .nav-section { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6B7280; padding: 16px 20px 8px; }
+  .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: #D1D5DB; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.05); color: #FFFFFF; border-left-color: var(--primary); }
+  .nav-link .icon { font-size: 18px; width: 24px; text-align: center; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; color: #9CA3AF; display: flex; align-items: center; gap: 8px; }
+  
+  /* Main content */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+  .topbar h2 { font-size: 20px; font-weight: 600; color: #111827; }
+  .topbar .badge-healthy { background: #D1FAE5; color: #065F46; font-size: 13px; padding: 6px 14px; border-radius: 9999px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .topbar .badge-degraded { background: #FEE2E2; color: #991B1B; font-size: 13px; padding: 6px 14px; border-radius: 9999px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .content { padding: 32px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+  /* Cards grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
+  .stat-card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+  .stat-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .stat-card .stat-val { font-size: 32px; font-weight: 700; color: #111827; line-height: 1; }
+  .stat-card .stat-label { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .stat-card .stat-icon { font-size: 24px; padding: 12px; background: #EEF2FF; color: var(--primary); border-radius: 12px; display: inline-flex; }
+
+  /* Table */
+  .table-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+  .table-card .table-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #F9FAFB; }
+  .table-card .table-header h3 { font-size: 16px; font-weight: 600; color: #111827; display: flex; align-items: center; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; text-align: left; }
+  th { background: #F9FAFB; padding: 14px 24px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 16px 24px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; color: #374151; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #F3F4F6; }
+
+  /* Form */
+  .form-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); padding: 24px; margin-bottom: 24px; }
+  .form-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #111827; display: flex; align-items: center; gap: 8px; }
+  .form-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .form-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 13px; font-weight: 500; color: #374151; }
+  .form-group input, .form-group select, .form-group textarea { border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 14px; outline: none; transition: all 0.2s; background: #FFFFFF; color: #111827; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #DC2626; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #059669; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+  /* Tags & badges */
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+  .tag-green { background: #D1FAE5; color: #065F46; }
+  .tag-red { background: #FEE2E2; color: #991B1B; }
+  .tag-blue { background: #DBEAFE; color: #1E40AF; }
+  .tag-orange { background: #FEF3C7; color: #92400E; }
+
+  /* Alerts */
+  .alert { padding: 16px; border-radius: var(--radius); font-size: 14px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; }
+  .alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #34D399; }
+  .alert-error { background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; }
+
+  /* Search bar */
+  .search-box { display: flex; gap: 12px; align-items: center; position: relative; }
+  .search-box i { position: absolute; left: 14px; color: #9CA3AF; }
+  .search-box input { border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px 10px 36px; font-size: 14px; width: 260px; transition: all 0.2s; }
+  .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); width: 300px; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 32px; right: 32px; background: #111827; color: #fff; padding: 16px 24px; border-radius: 12px; font-size: 15px; font-weight: 500; display: none; z-index: 9999; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); align-items: center; gap: 12px; }
+  #toast.show { display: flex; animation: slideup 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes slideup { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .empty-state { text-align: center; padding: 64px 20px; color: var(--muted); display: flex; flex-direction: column; align-items: center; }
+  .empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; color: #D1D5DB; }
+
+  /* Modals */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 999; opacity: 0; transition: opacity 0.2s; }
+  .modal-overlay.show { display: flex; opacity: 1; }
+  .modal-content { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 500px; position: relative; transform: translateY(20px); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  .modal-overlay.show .modal-content { transform: translateY(0); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-header h3 { font-size: 18px; font-weight: 600; color: #111827; margin: 0; }
+  .close-btn { background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer; transition: color 0.2s; line-height: 1; padding: 0; }
+  .close-btn:hover { color: #111827; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <i class="bi bi-book-half"></i>
+    <div>
+      <h1>Store</h1>
+      <p>Microservice Dashboard</p>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">Tổng quan</div>
+    <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="bi bi-grid-1x2-fill icon"></i> Dashboard</a>
+
+    <div class="nav-section">Quản lý</div>
+    <a href="/books/" class="nav-link {% if '/books/' in request.path %}active{% endif %}"><i class="bi bi-book icon"></i> Sách</a>
+    <a href="/customers/" class="nav-link {% if '/customers/' in request.path %}active{% endif %}"><i class="bi bi-people icon"></i> Khách hàng</a>
+    <a href="/orders/" class="nav-link {% if '/orders/' in request.path %}active{% endif %}"><i class="bi bi-box-seam icon"></i> Đơn hàng</a>
+    <a href="/staff-page/" class="nav-link {% if '/staff-page/' in request.path %}active{% endif %}"><i class="bi bi-person-badge icon"></i> Nhân viên</a>
+
+    <div class="nav-section">Giao dịch</div>
+    <a href="/payments-page/" class="nav-link {% if '/payments-page/' in request.path %}active{% endif %}"><i class="bi bi-credit-card icon"></i> Thanh toán</a>
+    <a href="/shipments-page/" class="nav-link {% if '/shipments-page/' in request.path %}active{% endif %}"><i class="bi bi-truck icon"></i> Vận chuyển</a>
+    <a href="/reviews-page/" class="nav-link {% if '/reviews-page/' in request.path %}active{% endif %}"><i class="bi bi-star icon"></i> Đánh giá</a>
+
+    <div class="nav-section">API</div>
+    <a href="/health/" class="nav-link" target="_blank"><i class="bi bi-heart-pulse icon"></i> Health Check</a>
+    <a href="/api/books/" class="nav-link" target="_blank"><i class="bi bi-plug icon"></i> REST API</a>
+  </nav>
+  <div class="sidebar-footer">
+    <i class="bi bi-activity"></i> 12 services $ang chạy
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+    <span id="health-badge">...</span>
+  </div>
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+function showToast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? '#1e8e3e' : '#c5221f';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Health badge
+fetch('/health/').then(r=>r.json()).then(d=>{
+  const el = document.getElementById('health-badge');
+  const ok = d.status === 'healthy';
+  el.innerHTML = ok ? '<i class="bi bi-check-circle-fill"></i> Healthy' : '<i class="bi bi-exclamation-triangle-fill"></i> Degraded';
+  el.className = ok ? 'badge-healthy' : 'badge-degraded';
+}).catch(()=>{ document.getElementById('health-badge').innerHTML='<i class="bi bi-x-circle-fill"></i> Offline'; });
+
+{% block extra_js %}{% endblock %}
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Thanh toán{% endblock %}
+{% block page_title %}<i class="bi bi-credit-card"></i> Quản lý Thanh toán{% endblock %}
+{% block content %}
+<div class="table-card">
+  <div class="table-header"><h3>Lịch sử thanh toán (<span id="cnt">0</span>)</h3></div>
+  <table>
+    <thead><tr><th>ID</th><th>Đơn hàng</th><th>Khách hàng</th><th>Số tiền</th><th>Phương thức</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
+    <tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:20px;color:#888">Đang tải...</td></tr></tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+const stMap = { pending:'tag-orange', completed:'tag-green', failed:'tag-red', refunded:'tag-blue' };
+fetch('/api/payments/').then(r=>r.json()).then(data=>{
+  const items = Array.isArray(data) ? data : [];
+  document.getElementById('cnt').textContent = items.length;
+  const tbody = document.getElementById('table-body');
+  if (!items.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i class="bi bi-credit-card"></i></div>Chưa có giao dịch</div></td></tr>'; return; }
+  tbody.innerHTML = items.map(p=>{
+    const st = p.status||'pending';
+    const date = p.created_at ? new Date(p.created_at).toLocaleDateString('vi-VN') : '—';
+    return `<tr>
+      <td style="color:#888">#${p.id}</td>
+      <td>ĐH #${p.order_id}</td>
+      <td>KH #${p.customer_id}</td>
+      <td><span class="tag tag-green">${Number(p.amount||0).toLocaleString('vi-VN')} $</span></td>
+      <td><span class="tag tag-blue">${p.method||'—'}</span></td>
+      <td><span class="tag ${stMap[st]||'tag-blue'}">${st}</span></td>
+      <td style="font-size:13px;color:#888">${date}</td>
+    </tr>`;
+  }).join('');
+});
+{% endblock %}

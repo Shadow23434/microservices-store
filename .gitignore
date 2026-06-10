@@ -1,0 +1,52 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+
+# Virtual envs
+env/
+venv/
+.venv/
+ENV/
+
+# Python packaging / build
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+htmlcov/
+
+# Django / DB / logs
+*.log
+*.sqlite3
+**/db.sqlite3
+**/db.sqlite3-journal
+local_settings.py
+
+# Environment files
+.env
+
+# Docker overrides, local compose
+docker-compose.override.yml
+
+# Editor / OS
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# Node / JS (if any)
+node_modules/
+
+# Misc
+*.tmp
+*.bak

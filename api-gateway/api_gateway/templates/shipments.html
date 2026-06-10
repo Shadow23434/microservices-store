@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Vận chuyển{% endblock %}
+{% block page_title %}<i class="bi bi-truck"></i> Quản lý Vận chuyển{% endblock %}
+{% block content %}
+<div class="table-card">
+  <div class="table-header"><h3>Danh sách vận $ơn (<span id="cnt">0</span>)</h3></div>
+  <table>
+    <thead><tr><th>ID</th><th>Đơn hàng</th><th>Khách hàng</th><th>Mã tracking</th><th>Địa chỉ</th><th>Trạng thái</th></tr></thead>
+    <tbody id="table-body"><tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Đang tải...</td></tr></tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+const stMap = { pending:'tag-orange', shipped:'tag-blue', delivered:'tag-green', returned:'tag-red' };
+fetch('/api/shipments/').then(r=>r.json()).then(data=>{
+  const items = Array.isArray(data) ? data : [];
+  document.getElementById('cnt').textContent = items.length;
+  const tbody = document.getElementById('table-body');
+  if (!items.length) { tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><i class="bi bi-truck"></i></div>Chưa có vận $ơn</div></td></tr>'; return; }
+  tbody.innerHTML = items.map(s=>{
+    const st = s.status||'pending';
+    return `<tr>
+      <td style="color:#888">#${s.id}</td>
+      <td>ĐH #${s.order_id}</td>
+      <td>KH #${s.customer_id}</td>
+      <td style="font-size:12px;font-family:monospace;color:#555">${(s.tracking_number||'—').substring(0,16)}…</td>
+      <td style="font-size:13px;color:#555">${s.address||'—'}</td>
+      <td><span class="tag ${stMap[st]||'tag-blue'}">${st}</span></td>
+    </tr>`;
+  }).join('');
+});
+{% endblock %}

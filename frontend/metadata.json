@@ -1,0 +1,5 @@
+{
+  "name": "Store",
+  "description": "A modern e-commerce bookstore application with catalog, book details, checkout, and user account features.",
+  "requestFramePermissions": []
+}

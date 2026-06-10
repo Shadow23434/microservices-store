@@ -1,0 +1,25 @@
+﻿{% extends "base.html" %}
+{% block title %}Giỏ hàng #{{ customer_id }}{% endblock %}
+{% block page_title %} Giỏ hàng  Khách hàng #{{ customer_id }}{% endblock %}
+
+{% block content %}
+<div class="table-card">
+  <div class="table-header">
+    <h3>Sản phẩm trong giỏ</h3>
+    <a href="/customers/" class="btn btn-primary btn-sm"> Về danh sách</a>
+  </div>
+  <table>
+    <thead><tr><th>Book ID</th><th>Số lượng</th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td> Book #{{ item.book_id }}</td>
+        <td><span class="tag tag-blue">{{ item.quantity }} cuốn</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="2"><div class="empty-state"><div class="empty-icon"></div>Giỏ hàng trống</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Đơn hàng{% endblock %}
+{% block page_title %}<i class="bi bi-box-seam"></i> Quản lý Đơn hàng{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <h3><i class="bi bi-plus-circle"></i> Tạo $ơn hàng mới</h3>
+
+  <div class="form-row">
+    <div class="form-group" style="flex:1">
+      <label>Khách hàng</label>
+      <select id="f-cid"><option value="">-- Chọn khách hàng --</option></select>
+    </div>
+    <div class="form-group" style="flex:2">
+      <label>Địa chỉ giao hàng</label>
+      <input id="f-addr" placeholder="123 Nguyễn Huệ, Q1, HCM">
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #eee;margin-top:12px;padding-top:16px">
+    <h4 style="margin:0 0 10px;font-size:14px;color:#555"><i class="bi bi-book-half"></i> Thêm sản phẩm vào $ơn</h4>
+    <div class="form-row" style="align-items:flex-end">
+      <div class="form-group" style="flex:3">
+        <label>Chọn sách</label>
+        <select id="f-book"><option value="">-- Chọn sách --</option></select>
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>Số lượng</label>
+        <input id="f-qty" type="number" value="1" min="1">
+      </div>
+      <div class="form-group" style="flex:0;padding-bottom:0">
+        <button class="btn btn-secondary" onclick="addItem()" style="white-space:nowrap"><i class="bi bi-plus-circle"></i> Thêm SP</button>
+      </div>
+    </div>
+
+    <div id="items-section" style="display:none;margin-top:8px">
+      <table style="width:100%;font-size:13px;border-collapse:collapse;border:1px solid #eee;border-radius:8px;overflow:hidden">
+        <thead><tr style="background:#f8f9fa">
+          <th style="padding:8px 12px;text-align:left">Sách</th>
+          <th style="padding:8px 12px;text-align:center">SL</th>
+          <th style="padding:8px 12px;text-align:right">Đơn giá</th>
+          <th style="padding:8px 12px;text-align:right">Thành tiền</th>
+          <th style="padding:8px 12px"></th>
+        </tr></thead>
+        <tbody id="items-list"></tbody>
+        <tfoot><tr style="background:#f0fdf4">
+          <td colspan="3" style="padding:10px 12px;text-align:right;font-weight:600">Tổng cộng:</td>
+          <td style="padding:10px 12px;text-align:right;font-weight:700;color:#16a34a;font-size:15px" id="order-total">0 $</td>
+          <td></td>
+        </tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:16px">
+    <button class="btn btn-primary" onclick="submitOrder()"><i class="bi bi-cart"></i> Tạo $ơn hàng</button>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <h3>Danh sách $ơn hàng (<span id="cnt">0</span>)</h3>
+  </div>
+  <table>
+    <thead><tr><th>ID</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Địa chỉ</th><th>Trạng thái</th><th>Ngày tạo</th></tr></thead>
+    <tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:20px;color:#888">Đang tải...</td></tr></tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+var customerMap = {};
+var bookMap = {};
+var orderItems = [];
+var statusMap = { pending:'tag-orange', processing:'tag-blue', shipped:'tag-green', cancelled:'tag-red', confirmed:'tag-blue', completed:'tag-green' };
+
+function loadCustomers() {
+  fetch('/api/customers/').then(function(r) { return r.json(); }).then(function(data) {
+    var customers = Array.isArray(data) ? data : [];
+    customers.forEach(function(c) { customerMap[c.id] = c.name; });
+    var sel = document.getElementById('f-cid');
+    sel.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
+    customers.forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name + ' (#' + c.id + ')';
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function loadBooks() {
+  fetch('/api/books/').then(function(r) { return r.json(); }).then(function(data) {
+    var books = Array.isArray(data) ? data : [];
+    books.forEach(function(b) { bookMap[b.id] = { title: b.title, price: parseFloat(b.price) }; });
+    var sel = document.getElementById('f-book');
+    sel.innerHTML = '<option value="">-- Chọn sách --</option>';
+    books.forEach(function(b) {
+      var opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.title + '  —  ' + Number(b.price).toLocaleString('vi-VN') + ' $';
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function addItem() {
+  var bookId = parseInt(document.getElementById('f-book').value);
+  var qty = parseInt(document.getElementById('f-qty').value) || 1;
+  if (!bookId) { showToast('Chọn sách trước', false); return; }
+  var book = bookMap[bookId];
+  var existing = null;
+  for (var i = 0; i < orderItems.length; i++) { if (orderItems[i].book_id === bookId) { existing = orderItems[i]; break; } }
+  if (existing) {
+    existing.quantity += qty;
+  } else {
+    orderItems.push({ book_id: bookId, book_title: book.title, quantity: qty, unit_price: book.price });
+  }
+  renderItems();
+  document.getElementById('f-book').value = '';
+  document.getElementById('f-qty').value = 1;
+}
+
+function removeItem(bookId) {
+  orderItems = orderItems.filter(function(i) { return i.book_id !== bookId; });
+  renderItems();
+}
+
+function renderItems() {
+  var section = document.getElementById('items-section');
+  var tbody = document.getElementById('items-list');
+  if (!orderItems.length) { section.style.display = 'none'; tbody.innerHTML = ''; document.getElementById('order-total').textContent = '0 $'; return; }
+  section.style.display = 'block';
+  var total = 0;
+  tbody.innerHTML = orderItems.map(function(item) {
+    var sub = item.quantity * item.unit_price;
+    total += sub;
+    return '<tr>' +
+      '<td style="padding:8px 12px">' + item.book_title + '</td>' +
+      '<td style="padding:8px 12px;text-align:center">' + item.quantity + '</td>' +
+      '<td style="padding:8px 12px;text-align:right">' + Number(item.unit_price).toLocaleString('vi-VN') + ' $</td>' +
+      '<td style="padding:8px 12px;text-align:right;font-weight:600">' + Number(sub).toLocaleString('vi-VN') + ' $</td>' +
+      '<td style="padding:8px 12px;text-align:center"><button class="btn btn-danger btn-sm" onclick="removeItem(' + item.book_id + ')">✕</button></td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('order-total').textContent = Number(total).toLocaleString('vi-VN') + ' $';
+}
+
+function load() {
+  fetch('/api/orders/').then(function(r) { return r.json(); }).then(function(data) {
+    var orders = Array.isArray(data) ? data : (Array.isArray(data && data.results) ? data.results : []);
+    document.getElementById('cnt').textContent = orders.length;
+    var tbody = document.getElementById('table-body');
+    if (!orders.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div>Chưa có $ơn hàng</div></td></tr>'; return; }
+    tbody.innerHTML = orders.map(function(o) {
+      var st = o.status || 'pending';
+      var cls = statusMap[st] || 'tag-blue';
+      var date = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '—';
+      var custName = customerMap[o.customer_id] ? customerMap[o.customer_id] + ' (#' + o.customer_id + ')' : 'KH #' + o.customer_id;
+      var itemCount = (o.items && o.items.length) ? o.items.length + ' SP' : '—';
+      return '<tr>' +
+        '<td style="color:#888">#' + o.id + '</td>' +
+        '<td>' + custName + '</td>' +
+        '<td style="text-align:center"><span class="tag tag-blue">' + itemCount + '</span></td>' +
+        '<td><span class="tag tag-green">' + Number(o.total_amount||0).toLocaleString('vi-VN') + ' $</span></td>' +
+        '<td style="font-size:13px;color:#555">' + (o.shipping_address||'—') + '</td>' +
+        '<td><span class="tag ' + cls + '">' + st + '</span></td>' +
+        '<td style="font-size:13px;color:#888">' + date + '</td>' +
+        '</tr>';
+    }).join('');
+  });
+}
+
+function submitOrder() {
+  var customerId = document.getElementById('f-cid').value;
+  var addr = document.getElementById('f-addr').value.trim();
+  if (!customerId) { showToast('Chọn khách hàng', false); return; }
+  if (!addr) { showToast('Nhập $ịa chỉ giao hàng', false); return; }
+  if (!orderItems.length) { showToast('Thêm ít nhất 1 sản phẩm vào $ơn', false); return; }
+  var total = orderItems.reduce(function(s, i) { return s + i.quantity * i.unit_price; }, 0);
+  var body = {
+    customer_id: customerId,
+    shipping_address: addr,
+    total_amount: total.toFixed(2),
+    items: orderItems.map(function(i) { return { book_id: i.book_id, quantity: i.quantity, unit_price: i.unit_price.toFixed(2) }; }),
+  };
+  fetch('/api/orders/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
+    .then(function(r) { if(!r.ok) return r.json().then(function(e) { throw e; }); return r.json(); })
+    .then(function() {
+      showToast('Tao don hang thanh cong! Tong: ' + Number(total).toLocaleString('vi-VN') + ' d');
+      orderItems = [];
+      renderItems();
+      document.getElementById('f-cid').value = '';
+      document.getElementById('f-addr').value = '';
+      load();
+    })
+    .catch(function(e) { showToast('Loi: ' + JSON.stringify(e), false); });
+}
+
+loadCustomers();
+loadBooks();
+load();
+{% endblock %}
