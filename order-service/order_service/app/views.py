@@ -8,6 +8,7 @@ from .serializers import OrderSerializer, OrderItemSerializer
 
 PAY_SERVICE_URL = os.environ.get("PAY_SERVICE_URL", "http://pay-service:8000")
 SHIP_SERVICE_URL = os.environ.get("SHIP_SERVICE_URL", "http://ship-service:8000")
+PRODUCT_SERVICE_URL = os.environ.get("PRODUCT_SERVICE_URL", "http://product-service:8888")
 
 
 class OrderListCreate(APIView):
@@ -43,9 +44,26 @@ class OrderListCreate(APIView):
 
             # Tao cac san pham trong don hang
             for item in items_data:
+                product_id = int(item["product_id"])
+
+                # Fetch product details from product-service
+                product_name = item.get("product_name", "")
+                product_type = item.get("product_type", "book")
+
+                try:
+                    r = requests.get(f"{PRODUCT_SERVICE_URL}/api/products/{product_id}/", timeout=3)
+                    if r.status_code == 200:
+                        product = r.json()
+                        product_name = product.get("name", product_name)
+                        product_type = product.get("product_type", product_type)
+                except requests.exceptions.RequestException:
+                    pass  # Use provided values if service unavailable
+
                 OrderItem.objects.create(
                     order=order,
-                    book_id=int(item["book_id"]),
+                    product_id=product_id,
+                    product_name=product_name,
+                    product_type=product_type,
                     quantity=int(item.get("quantity", 1)),
                     unit_price=float(item["unit_price"]),
                 )

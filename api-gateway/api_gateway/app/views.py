@@ -8,6 +8,7 @@ from rest_framework import status
 
 SERVICES = {
     "customers": os.environ.get("CUSTOMER_SERVICE_URL", "http://customer-service:8888"),
+    "products": os.environ.get("PRODUCT_SERVICE_URL", "http://product-service:8888"),
     "books": os.environ.get("BOOK_SERVICE_URL", "http://book-service:8888"),
     "carts": os.environ.get("CART_SERVICE_URL", "http://cart-service:8888"),
     "staff": os.environ.get("STAFF_SERVICE_URL", "http://staff-service:8888"),
@@ -35,8 +36,9 @@ class RootView(APIView):
 
 def book_list(request):
     try:
-        r = requests.get(f"{SERVICES['books']}/books/", timeout=5)
-        books = r.json()
+        r = requests.get(f"{SERVICES['products']}/api/products/?product_type=book", timeout=5)
+        response_data = r.json()
+        books = response_data.get("results", response_data) if isinstance(response_data, dict) else response_data
     except Exception:
         books = []
     return render(request, "books.html", {"books": books})

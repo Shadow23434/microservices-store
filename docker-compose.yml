@@ -2,7 +2,6 @@
 name: microservice
 
 services:
-
   # ─────────────────────────────────────────────
   # PostgreSQL – shared instance, 12 databases
   # ─────────────────────────────────────────────
@@ -14,9 +13,8 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      # Tạo tất cả database khi khởi động lần đầu
       POSTGRES_MULTIPLE_DATABASES: >
-        customer_db,book_db,cart_db,staff_db,manager_db,
+        customer_db,book_db,product_db,cart_db,staff_db,manager_db,
         catalog_db,order_db,ship_db,pay_db,
         comment_rate_db,recommender_db,gateway_db
     volumes:
@@ -34,7 +32,9 @@ services:
   # Application services
   # ─────────────────────────────────────────────
   customer-service:
-    build: ./customer-service
+    build:
+      context: .
+      dockerfile: customer-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/customer_db
@@ -46,7 +46,9 @@ services:
         condition: service_started
 
   book-service:
-    build: ./book-service
+    build:
+      context: .
+      dockerfile: book-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/book_db
@@ -54,20 +56,35 @@ services:
       postgres:
         condition: service_healthy
 
-  cart-service:
-    build: ./cart-service
+  product-service:
+    build:
+      context: .
+      dockerfile: product-service/Dockerfile
     env_file: .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/cart_db
-      BOOK_SERVICE_URL: http://book-service:8888
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/product_db
     depends_on:
       postgres:
         condition: service_healthy
-      book-service:
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: cart-service/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/cart_db
+      PRODUCT_SERVICE_URL: http://product-service:8888
+    depends_on:
+      postgres:
+        condition: service_healthy
+      product-service:
         condition: service_started
 
   staff-service:
-    build: ./staff-service
+    build:
+      context: .
+      dockerfile: staff-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/staff_db
@@ -76,7 +93,9 @@ services:
         condition: service_healthy
 
   manager-service:
-    build: ./manager-service
+    build:
+      context: .
+      dockerfile: manager-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/manager_db
@@ -85,7 +104,9 @@ services:
         condition: service_healthy
 
   catalog-service:
-    build: ./catalog-service
+    build:
+      context: .
+      dockerfile: catalog-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/catalog_db
@@ -94,12 +115,15 @@ services:
         condition: service_healthy
 
   order-service:
-    build: ./order-service
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/order_db
       PAY_SERVICE_URL: http://pay-service:8888
       SHIP_SERVICE_URL: http://ship-service:8888
+      PRODUCT_SERVICE_URL: http://product-service:8888
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,9 +131,13 @@ services:
         condition: service_started
       ship-service:
         condition: service_started
+      product-service:
+        condition: service_started
 
   ship-service:
-    build: ./ship-service
+    build:
+      context: .
+      dockerfile: ship-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/ship_db
@@ -118,7 +146,9 @@ services:
         condition: service_healthy
 
   pay-service:
-    build: ./pay-service
+    build:
+      context: .
+      dockerfile: pay-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/pay_db
@@ -127,7 +157,9 @@ services:
         condition: service_healthy
 
   comment-rate-service:
-    build: ./comment-rate-service
+    build:
+      context: .
+      dockerfile: comment-rate-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/comment_rate_db
@@ -136,28 +168,33 @@ services:
         condition: service_healthy
 
   recommender-ai-service:
-    build: ./recommender-ai-service
+    build:
+      context: .
+      dockerfile: recommender-ai-service/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/recommender_db
-      BOOK_SERVICE_URL: http://book-service:8888
+      PRODUCT_SERVICE_URL: http://product-service:8888
       COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8888
     depends_on:
       postgres:
         condition: service_healthy
-      book-service:
+      product-service:
         condition: service_started
       comment-rate-service:
         condition: service_started
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
     ports:
       - "8888:8888"
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/gateway_db
       CUSTOMER_SERVICE_URL: http://customer-service:8888
+      PRODUCT_SERVICE_URL: http://product-service:8888
       BOOK_SERVICE_URL: http://book-service:8888
       CART_SERVICE_URL: http://cart-service:8888
       STAFF_SERVICE_URL: http://staff-service:8888
@@ -193,6 +230,26 @@ services:
         condition: service_started
       recommender-ai-service:
         condition: service_started
+
+  # ─────────────────────────────────────────────
+  # Init service – runs migrations & seeding once
+  # ─────────────────────────────────────────────
+  init-data:
+    build:
+      context: .
+      dockerfile: docker/init/Dockerfile
+    restart: "no"
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - default
 
 volumes:
   postgres_data:

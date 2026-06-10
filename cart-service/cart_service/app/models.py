@@ -14,9 +14,10 @@ class CartItem(models.Model):
     # Quan hệ 1-Nhiều: Một giỏ hàng có nhiều sản phẩm
     cart = models.ForeignKey(Cart, related_name="items", on_delete=models.CASCADE)
 
-    # Lưu ID của sách từ Book Service
-    book_id = models.IntegerField()
+    # Lưu ID của sản phẩm từ Product Service
+    product_id = models.IntegerField()
     quantity = models.IntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"Book {self.book_id} (x{self.quantity}) in Cart {self.cart.id}"
+        return f"Product {self.product_id} (x{self.quantity}) in Cart {self.cart.id}"

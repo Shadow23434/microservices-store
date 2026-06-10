@@ -1,6 +1,7 @@
 FROM python:3.10-slim
 WORKDIR /app
-COPY requirements.txt .
+COPY api-gateway/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY api_gateway/ .
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8888"]
+COPY docker/wait_for_db.py .
+COPY api-gateway/api_gateway/ .
+CMD ["sh", "-c", "python wait_for_db.py && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8888"]

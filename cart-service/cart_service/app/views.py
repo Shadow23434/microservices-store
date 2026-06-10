@@ -6,8 +6,8 @@ from rest_framework import status
 from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 
-# Docker: http://book-service:8000 | Local: http://127.0.0.1:8002
-BOOK_SERVICE_URL = os.environ.get("BOOK_SERVICE_URL", "http://book-service:8000")
+# Docker: http://product-service:8888 | Local: http://127.0.0.1:8888
+PRODUCT_SERVICE_URL = os.environ.get("PRODUCT_SERVICE_URL", "http://product-service:8888")
 
 
 class CartCreate(APIView):
@@ -21,23 +21,31 @@ class CartCreate(APIView):
 
 class AddCartItem(APIView):
     def post(self, request):
-        book_id = request.data.get("book_id")
+        product_id = request.data.get("product_id")
 
-        # 1. Kiểm tra tính tồn tại của sách thông qua Book Service
+        # 1. Kiểm tra tính tồn tại của sản phẩm thông qua Product Service
         try:
-            # Thay vì lấy tất cả sách, tốt nhất nên gọi API chi tiết của 1 cuốn sách:
-            # f"{BOOK_SERVICE_URL}/books/{book_id}/"
-            r = requests.get(f"{BOOK_SERVICE_URL}/books/", timeout=5)
-            books = r.json()
-
-            if not any(b["id"] == book_id for b in books):
+            r = requests.get(f"{PRODUCT_SERVICE_URL}/api/products/{product_id}/", timeout=5)
+            if r.status_code == 404:
                 return Response(
-                    {"error": "Book not found in Book Service"},
+                    {"error": "Product not found in Product Service"},
                     status=status.HTTP_404_NOT_FOUND,
+                )
+            if r.status_code != 200:
+                return Response(
+                    {"error": "Error fetching product from Product Service"},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+
+            product = r.json()
+            if product.get('stock', 0) < 1:
+                return Response(
+                    {"error": "Product out of stock"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
         except requests.exceptions.RequestException:
             return Response(
-                {"error": "Cannot connect to Book Service"},
+                {"error": "Cannot connect to Product Service"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 

@@ -7,11 +7,14 @@ from .serializers import ReviewSerializer
 
 class ReviewListCreate(APIView):
     def get(self, request):
-        book_id = request.query_params.get("book_id")
+        product_id = request.query_params.get("product_id")
+        product_type = request.query_params.get("product_type")
         customer_id = request.query_params.get("customer_id")
         reviews = Review.objects.all()
-        if book_id:
-            reviews = reviews.filter(book_id=book_id)
+        if product_id:
+            reviews = reviews.filter(product_id=product_id)
+        if product_type:
+            reviews = reviews.filter(product_type=product_type)
         if customer_id:
             reviews = reviews.filter(customer_id=customer_id)
         return Response(ReviewSerializer(reviews, many=True).data)
@@ -61,19 +64,19 @@ class ReviewDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class BookAverageRating(APIView):
-    """Tinh diem trung binh cua mot cuon sach"""
+class ProductAverageRating(APIView):
+    """Tinh diem trung binh cua mot san pham"""
 
-    def get(self, request, book_id):
-        reviews = Review.objects.filter(book_id=book_id)
+    def get(self, request, product_id):
+        reviews = Review.objects.filter(product_id=product_id)
         if not reviews.exists():
             return Response(
-                {"book_id": book_id, "average_rating": None, "total_reviews": 0}
+                {"product_id": product_id, "average_rating": None, "total_reviews": 0}
             )
         avg = sum(r.rating for r in reviews) / reviews.count()
         return Response(
             {
-                "book_id": book_id,
+                "product_id": product_id,
                 "average_rating": round(avg, 2),
                 "total_reviews": reviews.count(),
             }
