@@ -3,10 +3,11 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Star, Filter, ChevronDown, Check, ShoppingCart, SearchX, Heart, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
-import bookService from '../api/bookService';
+import productService from '../api/productService';
 import catalogService from '../api/catalogService';
 
 const FORMATS = ["Hardcover", "Paperback", "E-Book", "Audiobook"];
+const PRODUCT_TYPES = ["All", "Book", "Laptop", "Mobile", "Cloth"];
 const ITEMS_PER_PAGE = 6;
 
 export default function Catalog() {
@@ -21,7 +22,8 @@ export default function Catalog() {
   const [error, setError] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [priceRange, setPriceRange] = useState([0, 50]);
+  const [selectedProductType, setSelectedProductType] = useState("All");
+  const [priceRange, setPriceRange] = useState([0, 2000]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("Most Popular");
 
@@ -32,7 +34,7 @@ export default function Catalog() {
       setError('');
       try {
         const [booksData, categoriesData] = await Promise.all([
-          bookService.getAllBooks() as unknown as any[],
+          productService.getAllProducts() as unknown as any[],
           catalogService.getCategories() as unknown as any[],
         ]);
         setBooks(booksData || []);
@@ -51,7 +53,7 @@ export default function Catalog() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, priceRange, sortBy]);
+  }, [searchQuery, selectedCategory, selectedProductType, priceRange, sortBy]);
 
   const ALL_CATEGORIES = ['All', ...categories.map((c: any) => c.name || c.category_name || c.title || '').filter(Boolean)];
 
@@ -59,12 +61,18 @@ export default function Catalog() {
     let result = books.filter((book: any) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchesTitle = (book.title || '').toLowerCase().includes(query);
-        const matchesAuthor = (book.author || '').toLowerCase().includes(query);
+        const matchesTitle = (book.title || book.name || '').toLowerCase().includes(query);
+        const matchesAuthor = (book.author || book.detail?.brand || '').toLowerCase().includes(query);
         if (!matchesTitle && !matchesAuthor) return false;
       }
       if (selectedCategory !== "All" && book.category !== selectedCategory) {
         return false;
+      }
+      if (selectedProductType !== "All") {
+        const productType = (book.product_type || '').toLowerCase();
+        if (productType !== selectedProductType.toLowerCase()) {
+          return false;
+        }
       }
       if (parseFloat(book.price || '0') > priceRange[1]) {
         return false;
@@ -96,7 +104,7 @@ export default function Catalog() {
         break;
     }
     return result;
-  }, [books, searchQuery, selectedCategory, priceRange, sortBy]);
+  }, [books, searchQuery, selectedCategory, selectedProductType, priceRange, sortBy]);
 
   const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
   const paginatedBooks = filteredBooks.slice(
@@ -173,13 +181,35 @@ export default function Catalog() {
               </div>
             </div>
 
+            {/* Product Type */}
+            <div className="mb-8">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">Product Type</h3>
+              <div className="space-y-3">
+                {PRODUCT_TYPES.map(type => (
+                  <label key={type} className="flex items-center cursor-pointer group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 transition-colors ${selectedProductType === type ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 dark:border-gray-600 group-hover:border-indigo-400 dark:group-hover:border-indigo-500'}`}>
+                      {selectedProductType === type && <Check className="h-3.5 w-3.5 text-white" />}
+                    </div>
+                    <span className={`text-sm ${selectedProductType === type ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white'}`}>{type}</span>
+                    <input
+                      type="radio"
+                      className="hidden"
+                      checked={selectedProductType === type}
+                      onChange={() => setSelectedProductType(type)}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
             {/* Price Range */}
             <div className="mb-8">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">Price Range</h3>
               <input
                 type="range"
                 min="0"
-                max="100"
+                max="2000"
+                step="10"
                 className="w-full accent-indigo-600"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
@@ -248,12 +278,12 @@ export default function Catalog() {
           {/* Book Grid */}
           {paginatedBooks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {paginatedBooks.map((book: any) => (
-                <Link key={book.id} to={`/book/${book.id}`} className="group flex flex-col bg-white dark:bg-gray-950 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-800 hover:border-indigo-100 dark:hover:border-gray-700">
+              {paginatedBooks.map((product: any) => (
+                <Link key={product.id} to={`/product/${product.id}`} className="group flex flex-col bg-white dark:bg-gray-950 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-800 hover:border-indigo-100 dark:hover:border-gray-700">
                   <div className="aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 overflow-hidden relative">
                     <img
-                      src={book.image || book.cover_image || `https://picsum.photos/seed/book${book.id}/200/300`}
-                      alt={book.title}
+                      src={product.image || product.image_url || product.cover_image || `https://picsum.photos/seed/product${product.id}/200/300`}
+                      alt={product.title || product.name}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       referrerPolicy="no-referrer"
                     />
@@ -268,33 +298,33 @@ export default function Catalog() {
                     <button
                       onClick={(e) => {
                         e.preventDefault();
-                        if (isInWishlist(book.id)) {
-                          removeFromWishlist(book.id);
+                        if (isInWishlist(product.id)) {
+                          removeFromWishlist(product.id);
                         } else {
-                          addToWishlist(book);
+                          addToWishlist(product);
                         }
                       }}
                       className="absolute top-3 right-3 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-900 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors shadow-sm z-10"
                     >
-                      <Heart className={`h-4 w-4 ${isInWishlist(book.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                      <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                     </button>
                   </div>
                   <div className="p-4 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-1">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{book.category || 'General'}</p>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{product.category || product.product_type || 'General'}</p>
                       <div className="flex items-center">
                         <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
-                        <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">{book.rating || '0'}</span>
+                        <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">{product.rating || '0'}</span>
                       </div>
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{book.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{book.author}</p>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{product.title || product.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{product.author || product.detail?.brand || ''}</p>
                     <div className="mt-auto flex items-center justify-between">
-                      <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">${book.price || '0.00'}</span>
+                      <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">${product.price || '0.00'}</span>
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          addToCart({ ...book, format: 'Paperback' });
+                          addToCart({ ...product, format: 'Paperback' });
                         }}
                         className="text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1.5 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-800"
                       >
@@ -308,14 +338,15 @@ export default function Catalog() {
           ) : (
             <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800">
               <SearchX className="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No books found</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No products found</h3>
               <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
-                We couldn't find any books matching your search criteria. Try adjusting your filters or search query.
+                We couldn't find any products matching your search criteria. Try adjusting your filters or search query.
               </p>
               <button
                 onClick={() => {
                   setSelectedCategory("All");
-                  setPriceRange([0, 50]);
+                  setSelectedProductType("All");
+                  setPriceRange([0, 2000]);
                   window.history.replaceState(null, '', '/catalog');
                   window.dispatchEvent(new Event('popstate'));
                 }}

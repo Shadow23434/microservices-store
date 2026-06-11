@@ -4,7 +4,7 @@ import { Star, ArrowRight, BookOpen, TrendingUp, Award, ShoppingCart, Heart, Spa
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import bookService from '../api/bookService';
+import productService from '../api/productService';
 import catalogService from '../api/catalogService';
 import recommenderService from '../api/recommenderService';
 import reviewService from '../api/reviewService';
@@ -45,45 +45,45 @@ export default function Home() {
   const { addToCart } = useCart();
   const { user } = useAuth();
 
-  const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [recommendations, setRecommendations] = useState<any[]>([]);
 
-  // Tải sách và categories từ API
+  // Tải sản phẩm và categories từ API
   useEffect(() => {
     const loadData = async () => {
-      setIsLoadingBooks(true);
+      setIsLoadingProducts(true);
       try {
-        const [booksData, categoriesData] = await Promise.all([
-          bookService.getAllBooks() as unknown as any[],
+        const [productsData, categoriesData] = await Promise.all([
+          productService.getAllProducts() as unknown as any[],
           catalogService.getCategories() as unknown as any[],
         ]);
-        
-        const initialBooks = (booksData || []).slice(0, 4);
-        
-        // Lấy rating song song cho các sách
-        const booksWithRating = await Promise.all(
-          initialBooks.map(async (book: any) => {
+
+        const initialProducts = (productsData || []).slice(0, 8);
+
+        // Lấy rating song song cho các sản phẩm
+        const productsWithRating = await Promise.all(
+          initialProducts.map(async (product: any) => {
             try {
-              const ratingData = await reviewService.getBookRating(book.id) as any;
+              const ratingData = await reviewService.getBookRating(product.id) as any;
               if (ratingData && ratingData.average_rating !== null) {
-                return { ...book, rating: ratingData.average_rating, reviews: ratingData.total_reviews };
+                return { ...product, rating: ratingData.average_rating, reviews: ratingData.total_reviews };
               }
             } catch(e) {}
-            return book;
+            return product;
           })
         );
-        
-        setFeaturedBooks(booksWithRating);
+
+        setFeaturedProducts(productsWithRating);
         setCategories((categoriesData || []).slice(0, 6));
       } catch (err) {
         console.error('Failed to load home data:', err);
-        setFeaturedBooks([]);
+        setFeaturedProducts([]);
         setCategories([]);
       } finally {
-        setIsLoadingBooks(false);
+        setIsLoadingProducts(false);
       }
     };
     loadData();
@@ -100,28 +100,28 @@ export default function Home() {
         recsToProcess = Array.isArray(recs) ? recs.slice(0, 3) : [];
       } else {
         // Fallback: lấy random 3 sách từ danh sách
-        const allBooks = await bookService.getAllBooks() as unknown as any[];
+        const allBooks = await productService.getBooks() as unknown as any[];
         const shuffled = [...(allBooks || [])].sort(() => 0.5 - Math.random());
         recsToProcess = shuffled.slice(0, 3);
       }
       
       const recsWithRating = await Promise.all(
-        recsToProcess.map(async (book: any) => {
+        recsToProcess.map(async (product: any) => {
           try {
-            const ratingData = await reviewService.getBookRating(book.id) as any;
+            const ratingData = await reviewService.getBookRating(product.id) as any;
             if (ratingData && ratingData.average_rating !== null) {
-              return { ...book, rating: ratingData.average_rating, reviews: ratingData.total_reviews };
+              return { ...product, rating: ratingData.average_rating, reviews: ratingData.total_reviews };
             }
           } catch(e) {}
-          return book;
+          return product;
         })
       );
-      
+
       setRecommendations(recsWithRating);
     } catch (err) {
       console.error('Failed to get recommendations:', err);
-      // Fallback to featured books subset
-      setRecommendations(featuredBooks.slice(0, 3));
+      // Fallback to featured products subset
+      setRecommendations(featuredProducts.slice(0, 3));
     } finally {
       setIsGenerating(false);
     }
@@ -226,18 +226,18 @@ export default function Home() {
             </Link>
           </div>
 
-          {isLoadingBooks ? (
+          {isLoadingProducts ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredBooks.map((book: any) => (
-                <div key={book.id} className="group flex flex-col bg-white dark:bg-gray-950 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-800 relative">
-                  <Link to={`/book/${book.id}`} className="block aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+              {featuredProducts.map((product: any) => (
+                <div key={product.id} className="group flex flex-col bg-white dark:bg-gray-950 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-800 relative">
+                  <Link to={`/product/${product.id}`} className="block aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 overflow-hidden">
                     <img
-                      src={book.image || book.cover_image || `https://picsum.photos/seed/book${book.id}/200/300`}
-                      alt={book.title}
+                      src={product.image || product.image_url || product.cover_image || `https://picsum.photos/seed/product${product.id}/200/300`}
+                      alt={product.title || product.name}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       referrerPolicy="no-referrer"
                     />
@@ -246,34 +246,34 @@ export default function Home() {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      if (isInWishlist(book.id)) {
-                        removeFromWishlist(book.id);
+                      if (isInWishlist(product.id)) {
+                        removeFromWishlist(product.id);
                       } else {
-                        addToWishlist({ ...book, format: 'Paperback' });
+                        addToWishlist({ ...product, format: 'Paperback' });
                       }
                     }}
                     className="absolute top-3 right-3 p-2 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-900 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors shadow-sm z-10"
                   >
-                    <Heart className={`h-4 w-4 ${isInWishlist(book.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                    <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                   </button>
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
-                      <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{book.category || 'General'}</p>
+                      <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{product.category || product.product_type || 'General'}</p>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                          <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">{Number(book.rating || 0).toFixed(1)}</span>
+                          <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">{Number(product.rating || 0).toFixed(1)}</span>
                       </div>
                     </div>
-                    <Link to={`/book/${book.id}`} className="block">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{book.title}</h3>
+                    <Link to={`/product/${product.id}`} className="block">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{product.title || product.name}</h3>
                     </Link>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{book.author}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{product.author || product.detail?.brand || product.description?.substring(0, 50)}</p>
                     <div className="mt-auto flex items-center justify-between">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">${book.price || '0.00'}</span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">${product.price || '0.00'}</span>
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          addToCart({ ...book, format: 'Paperback' });
+                          addToCart({ ...product, format: 'Paperback' });
                         }}
                         className="bg-gray-900 dark:bg-gray-800 text-white p-2 rounded-full hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-colors"
                       >
@@ -318,7 +318,7 @@ export default function Home() {
             {recommendations.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {recommendations.map((book: any) => (
-                  <Link key={book.id} to={`/book/${book.id}`} className="group flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-800">
+                  <Link key={book.id} to={`/product/${book.id}`} className="group flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-800">
                     <div className="aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 overflow-hidden">
                       <img
                         src={book.image || book.cover_image || `https://picsum.photos/seed/book${book.id}/200/300`}

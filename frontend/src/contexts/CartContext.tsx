@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Book, CartItem } from '../types';
+import { Product, CartItem } from '../types';
+import { normalizeProduct } from '../utils/normalizeProduct';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (book: Book, quantity?: number) => void;
-  removeFromCart: (bookId: number | string) => void;
-  updateQuantity: (bookId: number | string, quantity: number) => void;
+  addToCart: (product: Product, quantity?: number) => void;
+  removeFromCart: (productId: number | string) => void;
+  updateQuantity: (productId: number | string, quantity: number) => void;
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
@@ -23,32 +24,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (book: Book, quantity: number = 1) => {
+  const addToCart = (product: Product, quantity: number = 1) => {
     setCartItems((prev) => {
-      const existingItem = prev.find((item) => Number(item.id) === Number(book.id));
+      const existingItem = prev.find((item) => Number(item.id) === Number(product.id));
       if (existingItem) {
         return prev.map((item) =>
-          Number(item.id) === Number(book.id)
+          Number(item.id) === Number(product.id)
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { ...book, quantity }];
+      const normalized = normalizeProduct(product);
+      return [...prev, { ...normalized, quantity }];
     });
   };
 
-  const removeFromCart = (bookId: number | string) => {
-    setCartItems((prev) => prev.filter((item) => Number(item.id) !== Number(bookId)));
+  const removeFromCart = (productId: number | string) => {
+    setCartItems((prev) => prev.filter((item) => Number(item.id) !== Number(productId)));
   };
 
-  const updateQuantity = (bookId: number | string, quantity: number) => {
+  const updateQuantity = (productId: number | string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(bookId);
+      removeFromCart(productId);
       return;
     }
     setCartItems((prev) =>
       prev.map((item) =>
-        Number(item.id) === Number(bookId) ? { ...item, quantity } : item
+        Number(item.id) === Number(productId) ? { ...item, quantity } : item
       )
     );
   };

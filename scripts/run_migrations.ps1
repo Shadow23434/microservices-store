@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 
 $services = @(
     "customer-service",
-    "book-service",
+    "product-service",
     "cart-service",
     "staff-service",
     "manager-service",

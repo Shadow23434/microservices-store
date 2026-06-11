@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import customerService from '../api/customerService';
 import orderService from '../api/orderService';
 import reviewService from '../api/reviewService';
-import bookService from '../api/bookService';
+import productService from '../api/productService';
 import shipmentService from '../api/shipmentService';
 
 export default function Account() {
@@ -54,7 +54,7 @@ export default function Account() {
         const [ordersData, reviewsData, booksData, shipmentsData] = await Promise.all([
           orderService.getOrdersByCustomer(user.id) as unknown as any[],
           reviewService.getReviews({ customer_id: user.id }) as unknown as any[],
-          bookService.getAllBooks() as unknown as any[],
+          productService.getAllProducts() as unknown as any[],
           shipmentService.getShipments() as unknown as any[]
         ]);
 
@@ -65,10 +65,10 @@ export default function Account() {
 
         const validReviews = Array.isArray(reviewsData) ? reviewsData : [];
         const enrichedReviews = validReviews.map(r => {
-            const bookId = r.book_id || r.bookId;
-            const book = booksList.find((b: any) => b.id === bookId || b.id == bookId);
-            if (book) {
-                return { ...r, bookTitle: book.title, bookAuthor: book.author, bookImage: book.image };
+            const productId = r.product_id;
+            const product = booksList.find((b: any) => b.id === productId);
+            if (product) {
+                return { ...r, productTitle: product.title || product.name, productAuthor: product.author, productImage: product.image };
             }
             return r;
         });
@@ -77,10 +77,10 @@ export default function Account() {
         const enrichedOrders = validOrders.map(order => {
           if (order.items && Array.isArray(order.items)) {
             const enrichedItems = order.items.map((item: any) => {
-              const bookId = item.book_id || item.bookId;
-              const book = booksList.find((b: any) => b.id === bookId || b.id == bookId);
-              if (book) {
-                return { ...item, title: book.title, image: book.image || book.imageUrl || `https://picsum.photos/seed/book${bookId}/400/600` };
+              const productId = item.product_id;
+              const product = booksList.find((b: any) => b.id === productId);
+              if (product) {
+                return { ...item, title: product.title || product.name, image: product.image || product.imageUrl || `https://picsum.photos/seed/book${productId}/400/600` };
               }
               return item;
             });
@@ -415,8 +415,8 @@ export default function Account() {
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div>
-                                  <Link to={`/book/${review.book_id || review.bookId}`} className="font-bold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 text-lg">
-                                    {review.bookTitle || `Book ID: ${review.book_id}`}
+                                  <Link to={`/product/${review.book_id || review.bookId}`} className="font-bold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 text-lg">
+                                    {review.bookTitle || `Product ID: ${review.book_id}`}
                                     {review.bookAuthor && <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">by {review.bookAuthor}</span>}
                                   </Link>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">

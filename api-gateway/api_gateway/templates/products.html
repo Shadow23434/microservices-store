@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+{% block title %}Quản lý Sản phẩm{% endblock %}
+{% block page_title %}<i class="bi bi-box-seam"></i> Quản lý Sản phẩm{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <h3><i class="bi bi-plus-circle"></i> Thêm sản phẩm mới</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Loại sản phẩm</label>
+      <select id="f-product-type" onchange="updateFormFields()">
+        <option value="book">Sách</option>
+        <option value="laptop">Laptop</option>
+        <option value="mobile">Điện thoại</option>
+        <option value="cloth">Quần áo</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Tên sản phẩm</label><input id="f-name" placeholder="Tên sản phẩm"></div>
+    <div class="form-group"><label>Giá ($)</label><input id="f-price" type="number" placeholder="150000"></div>
+    <div class="form-group"><label>Tồn kho</label><input id="f-stock" type="number" placeholder="10"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Mô tả</label><input id="f-description" placeholder="Mô tả sản phẩm"></div>
+    <div class="form-group"><label>URL ảnh</label><input id="f-image-url" placeholder="https://example.com/image.jpg"></div>
+    <div class="form-group"><label>SKU (tùy chọn)</label><input id="f-sku" placeholder="SKU"></div>
+  </div>
+  <div id="detail-fields" class="form-row">
+    <!-- Dynamic fields based on product type -->
+  </div>
+  <button class="btn btn-primary" onclick="addProduct()"><i class="bi bi-plus-circle"></i> Thêm sản phẩm</button>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <h3>Danh sách sản phẩm (<span id="product-count">0</span>)</h3>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <select id="filter-type" onchange="filterProducts()" style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;">
+        <option value="">Tất cả loại</option>
+        <option value="book">Sách</option>
+        <option value="laptop">Laptop</option>
+        <option value="mobile">Điện thoại</option>
+        <option value="cloth">Quần áo</option>
+      </select>
+      <div class="search-box"><i class="bi bi-search"></i><input id="search" placeholder="Tìm kiếm..." oninput="filterProducts()"></div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>ID</th><th>Ảnh</th><th>Tên</th><th>Loại</th><th>Chi tiết</th><th>Giá</th><th>Tồn kho</th><th>Thao tác</th></tr></thead>
+    <tbody id="product-table"><tr><td colspan="8" style="text-align:center;padding:20px;color:#888">Đang tải...</td></tr></tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="editProductModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="bi bi-pencil-square"></i> Cập nhật sản phẩm</h3>
+      <button class="close-btn" onclick="closeEditModal()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Loại sản phẩm</label>
+      <select id="edit-product-type" onchange="updateEditFormFields()">
+        <option value="book">Sách</option>
+        <option value="laptop">Laptop</option>
+        <option value="mobile">Điện thoại</option>
+        <option value="cloth">Quần áo</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Tên sản phẩm</label><input id="edit-name"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Giá ($)</label><input id="edit-price" type="number"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Tồn kho</label><input id="edit-stock" type="number"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Mô tả</label><input id="edit-description"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>URL ảnh</label><input id="edit-image-url"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>SKU</label><input id="edit-sku"></div>
+    <div id="edit-detail-fields" style="margin-bottom:12px;">
+      <!-- Dynamic fields based on product type -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#e5e7eb;color:#374151" onclick="closeEditModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveEditProduct()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+let allProducts = [];
+
+const detailFieldsConfig = {
+  book: [
+    { id: 'author', label: 'Tác giả', placeholder: 'Nguyễn Văn A' },
+    { id: 'isbn', label: 'ISBN', placeholder: 'ISBN' },
+    { id: 'publisher', label: 'Nhà xuất bản', placeholder: 'NXB Kim Đồng' },
+    { id: 'pages', label: 'Số trang', type: 'number', placeholder: '200' },
+    { id: 'language', label: 'Ngôn ngữ', placeholder: 'vi' }
+  ],
+  laptop: [
+    { id: 'brand', label: 'Thương hiệu', placeholder: 'Dell' },
+    { id: 'cpu', label: 'CPU', placeholder: 'Intel Core i5' },
+    { id: 'ram_gb', label: 'RAM (GB)', type: 'number', placeholder: '8' },
+    { id: 'storage_gb', label: 'Bộ nhớ (GB)', type: 'number', placeholder: '256' },
+    { id: 'display_inch', label: 'Màn hình (inch)', type: 'number', placeholder: '15.6' },
+    { id: 'os', label: 'Hệ điều hành', placeholder: 'Windows 11' },
+    { id: 'gpu', label: 'GPU', placeholder: 'NVIDIA GTX 1650' }
+  ],
+  mobile: [
+    { id: 'brand', label: 'Thương hiệu', placeholder: 'Samsung' },
+    { id: 'screen_inch', label: 'Màn hình (inch)', type: 'number', placeholder: '6.5' },
+    { id: 'battery_mah', label: 'Pin (mAh)', type: 'number', placeholder: '4000' },
+    { id: 'ram_gb', label: 'RAM (GB)', type: 'number', placeholder: '6' },
+    { id: 'storage_gb', label: 'Bộ nhớ (GB)', type: 'number', placeholder: '128' },
+    { id: 'camera_mp', label: 'Camera (MP)', type: 'number', placeholder: '48' },
+    { id: 'os', label: 'Hệ điều hành', placeholder: 'Android 12' }
+  ],
+  cloth: [
+    { id: 'brand', label: 'Thương hiệu', placeholder: 'Zara' },
+    { id: 'sizes', label: 'Size', placeholder: 'S, M, L, XL' },
+    { id: 'color', label: 'Màu sắc', placeholder: 'Đen, Trắng' },
+    { id: 'material', label: 'Chất liệu', placeholder: 'Cotton' },
+    { id: 'gender', label: 'Giới tính', placeholder: 'Nam/Nữ/Unisex' }
+  ]
+};
+
+const productTypeLabels = {
+  book: 'Sách',
+  laptop: 'Laptop',
+  mobile: 'Điện thoại',
+  cloth: 'Quần áo'
+};
+
+function updateFormFields() {
+  const type = document.getElementById('f-product-type').value;
+  const container = document.getElementById('detail-fields');
+  const fields = detailFieldsConfig[type] || [];
+
+  container.innerHTML = fields.map(f => {
+    const inputType = f.type || 'text';
+    return `<div class="form-group"><label>${f.label}</label><input id="f-${f.id}" type="${inputType}" placeholder="${f.placeholder}"></div>`;
+  }).join('');
+}
+
+function updateEditFormFields() {
+  const type = document.getElementById('edit-product-type').value;
+  const container = document.getElementById('edit-detail-fields');
+  const fields = detailFieldsConfig[type] || [];
+
+  container.innerHTML = fields.map(f => {
+    const inputType = f.type || 'text';
+    return `<div class="form-group" style="margin-bottom:12px;"><label>${f.label}</label><input id="edit-${f.id}" type="${inputType}" placeholder="${f.placeholder}"></div>`;
+  }).join('');
+}
+
+function loadProducts() {
+  fetch('/api/products/').then(r => r.json()).then(data => {
+    allProducts = data.results || data;
+    if (!Array.isArray(allProducts)) allProducts = [];
+    document.getElementById('product-count').textContent = allProducts.length;
+    renderProducts(allProducts);
+  }).catch(() => showToast('Không tải được danh sách sản phẩm', false));
+}
+
+function renderProducts(products) {
+  const tbody = document.getElementById('product-table');
+  if (!products.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon"></div>Chưa có sản phẩm nào</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = products.map(p => {
+    const price = Number(p.price).toLocaleString('vi-VN');
+    const stockTag = p.stock > 0 ? 'tag-blue' : 'tag-red';
+    const imageCell = p.image_url
+      ? '<img src="' + p.image_url + '" alt="' + p.name + '" style="width:56px;height:84px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">'
+      : '<div style="width:56px;height:84px;border-radius:8px;border:1px dashed #d1d5db;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;">No image</div>';
+
+    const detailText = getDetailText(p);
+
+    return '<tr>' +
+      '<td style="color:#888">#' + p.id + '</td>' +
+      '<td>' + imageCell + '</td>' +
+      '<td><strong>' + p.name + '</strong></td>' +
+      '<td><span class="tag tag-purple">' + productTypeLabels[p.product_type] + '</span></td>' +
+      '<td style="font-size:12px;color:#666;">' + detailText + '</td>' +
+      '<td><span class="tag tag-green">' + price + ' $</span></td>' +
+      '<td><span class="tag ' + stockTag + '">' + p.stock + '</span></td>' +
+      '<td>' +
+      '<button class="btn btn-primary btn-sm" onclick="editProduct(' + p.id + ')">Sửa</button> ' +
+      '<button class="btn btn-danger btn-sm" onclick="deleteProduct(' + p.id + ')">Xóa</button>' +
+      '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function getDetailText(product) {
+  if (!product.detail) return '-';
+  const detail = product.detail;
+  switch (product.product_type) {
+    case 'book':
+      return detail.author || '-';
+    case 'laptop':
+      return (detail.brand || '') + ' ' + (detail.cpu || '');
+    case 'mobile':
+      return (detail.brand || '') + ' ' + (detail.ram_gb ? detail.ram_gb + 'GB' : '');
+    case 'cloth':
+      return (detail.brand || '') + ' ' + (detail.color || '');
+    default:
+      return '-';
+  }
+}
+
+function filterProducts() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const type = document.getElementById('filter-type').value;
+  let filtered = allProducts;
+  if (type) {
+    filtered = filtered.filter(p => p.product_type === type);
+  }
+  if (q) {
+    filtered = filtered.filter(p => p.name.toLowerCase().includes(q));
+  }
+  renderProducts(filtered);
+}
+
+function collectDetailFields(prefix) {
+  const type = document.getElementById(prefix + '-product-type').value;
+  const fields = detailFieldsConfig[type] || [];
+  const detail = {};
+  fields.forEach(f => {
+    const val = document.getElementById(prefix + '-' + f.id).value.trim();
+    if (val) detail[f.id] = val;
+  });
+  return detail;
+}
+
+function addProduct() {
+  const body = {
+    name: document.getElementById('f-name').value.trim(),
+    product_type: document.getElementById('f-product-type').value,
+    price: document.getElementById('f-price').value,
+    stock: document.getElementById('f-stock').value,
+    description: document.getElementById('f-description').value.trim(),
+    image_url: document.getElementById('f-image-url').value.trim(),
+    sku: document.getElementById('f-sku').value.trim(),
+    detail: collectDetailFields('f')
+  };
+
+  if (!body.name || !body.price || !body.stock) {
+    showToast('Vui lòng điền đầy đủ thông tin bắt buộc', false);
+    return;
+  }
+
+  fetch('/api/products/', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})
+    .then(r => { if (!r.ok) return r.json().then(e => { throw e; }); return r.json(); })
+    .then(() => {
+      showToast('Thêm sản phẩm thành công!');
+      loadProducts();
+      ['f-name', 'f-price', 'f-stock', 'f-description', 'f-image-url', 'f-sku'].forEach(id => document.getElementById(id).value = '');
+      updateFormFields();
+    })
+    .catch(e => showToast('Lỗi: ' + JSON.stringify(e), false));
+}
+
+let currentEditProductId = null;
+
+function editProduct(id) {
+  const product = allProducts.find(p => p.id === id);
+  if (!product) {
+    showToast('Không tìm thấy sản phẩm', false);
+    return;
+  }
+  currentEditProductId = id;
+  document.getElementById('edit-product-type').value = product.product_type;
+  document.getElementById('edit-name').value = product.name || '';
+  document.getElementById('edit-price').value = product.price || '';
+  document.getElementById('edit-stock').value = product.stock || '';
+  document.getElementById('edit-description').value = product.description || '';
+  document.getElementById('edit-image-url').value = product.image_url || '';
+  document.getElementById('edit-sku').value = product.sku || '';
+
+  updateEditFormFields();
+
+  if (product.detail) {
+    const fields = detailFieldsConfig[product.product_type] || [];
+    fields.forEach(f => {
+      const elem = document.getElementById('edit-' + f.id);
+      if (elem && product.detail[f.id] !== undefined) {
+        elem.value = product.detail[f.id];
+      }
+    });
+  }
+
+  document.getElementById('editProductModal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editProductModal').classList.remove('show');
+  currentEditProductId = null;
+}
+
+function saveEditProduct() {
+  if (!currentEditProductId) return;
+
+  const body = {
+    name: document.getElementById('edit-name').value.trim(),
+    product_type: document.getElementById('edit-product-type').value,
+    price: document.getElementById('edit-price').value,
+    stock: document.getElementById('edit-stock').value,
+    description: document.getElementById('edit-description').value.trim(),
+    image_url: document.getElementById('edit-image-url').value.trim(),
+    sku: document.getElementById('edit-sku').value.trim(),
+    detail: collectDetailFields('edit')
+  };
+
+  if (!body.name || !body.price || !body.stock) {
+    showToast('Vui lòng điền đầy đủ thông tin bắt buộc', false);
+    return;
+  }
+
+  fetch('/api/products/' + currentEditProductId + '/', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  })
+    .then(r => { if (!r.ok) return r.json().then(e => { throw e; }); return r.json(); })
+    .then(() => {
+      showToast('Cập nhật sản phẩm thành công');
+      closeEditModal();
+      loadProducts();
+    })
+    .catch(e => showToast('Lỗi: ' + JSON.stringify(e), false));
+}
+
+function deleteProduct(id) {
+  if (!confirm('Xóa sản phẩm này?')) return;
+  fetch('/api/products/' + id + '/', {method: 'DELETE'})
+    .then(() => { showToast('Đã xóa sản phẩm'); loadProducts(); })
+    .catch(() => showToast('Lỗi khi xóa', false));
+}
+
+updateFormFields();
+loadProducts();
+{% endblock %}

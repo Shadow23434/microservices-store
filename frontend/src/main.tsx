@@ -11,7 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
-import BookDetail from './pages/BookDetail';
+import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
@@ -41,7 +41,7 @@ root.render(
                     <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                       <Route index element={<Home />} />
                       <Route path="catalog" element={<Catalog />} />
-                      <Route path="book/:id" element={<BookDetail />} />
+                      <Route path="product/:id" element={<ProductDetail />} />
                       <Route path="cart" element={<Checkout />} />
                       <Route path="order-success" element={<OrderSuccess />} />
                       <Route path="account" element={<Account />} />

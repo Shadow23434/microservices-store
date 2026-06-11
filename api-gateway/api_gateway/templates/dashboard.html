@@ -7,10 +7,10 @@
   <div class="stat-card">
     <div class="stat-card-header">
       <div>
-        <div class="stat-val" id="cnt-books">—</div>
-        <div class="stat-label">Sách</div>
+        <div class="stat-val" id="cnt-products">—</div>
+        <div class="stat-label">Sản phẩm</div>
       </div>
-      <div class="stat-icon"><i class="bi bi-book"></i></div>
+      <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
     </div>
   </div>
   <div class="stat-card">
@@ -71,12 +71,12 @@
 
 {% block extra_js %}
 const serviceMap = {
-  customers: 8001, books: 8002, carts: 8003, staff: 8004,
+  customers: 8001, products: 8002, carts: 8003, staff: 8004,
   managers: 8005, categories: 8006, orders: 8007, shipments: 8008,
   payments: 8009, reviews: 8010, recommendations: 8011
 };
 const countMap = {
-  books: 'cnt-books', customers: 'cnt-customers', orders: 'cnt-orders',
+  products: 'cnt-products', customers: 'cnt-customers', orders: 'cnt-orders',
   payments: 'cnt-payments', shipments: 'cnt-shipments', reviews: 'cnt-reviews'
 };
 

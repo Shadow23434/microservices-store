@@ -20,7 +20,7 @@ from app.views import (
     GatewayView,
     HealthCheck,
     RootView,
-    book_list,
+    product_list,
     view_cart,
     customers_page,
     orders_page,
@@ -34,7 +34,8 @@ urlpatterns = [
     path("", RootView.as_view(), name="root"),
     path("health/", HealthCheck.as_view(), name="health-check"),
     # Template pages
-    path("books/", book_list, name="book-list"),
+    path("products/", product_list, name="product-list"),
+    path("books/", product_list, name="book-list"),  # backward compatibility alias
     path("customers/", customers_page, name="customers-page"),
     path("orders/", orders_page, name="orders-page"),
     path("staff-page/", staff_page, name="staff-page"),

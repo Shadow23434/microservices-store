@@ -17,15 +17,15 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from app.views import ReviewListCreate, ReviewDetail, BookAverageRating
+from app.views import ReviewListCreate, ReviewDetail, ProductAverageRating
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("reviews/", ReviewListCreate.as_view(), name="review-list-create"),
     path("reviews/<int:pk>/", ReviewDetail.as_view(), name="review-detail"),
     path(
-        "reviews/book/<int:book_id>/rating/",
-        BookAverageRating.as_view(),
-        name="book-avg-rating",
+        "reviews/product/<int:product_id>/rating/",
+        ProductAverageRating.as_view(),
+        name="product-avg-rating",
     ),
 ]

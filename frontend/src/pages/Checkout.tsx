@@ -43,7 +43,7 @@ export default function Checkout() {
         shipping_address: shippingAddress || '123 Default St',
         payment_method: paymentMethod,
         items: cartItems.map((item: any) => ({
-          book_id: item.id,
+          product_id: item.id,
           quantity: item.quantity,
           unit_price: item.price,
         })),
@@ -107,13 +107,13 @@ export default function Checkout() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Your cart is empty</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md">
-            Looks like you haven't added any books to your cart yet. Explore our catalog to find your next great read!
+            Looks like you haven't added any products to your cart yet. Explore our catalog to find your next great read!
           </p>
           <Link
             to="/catalog"
             className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
           >
-            Browse Books
+            Browse Products
           </Link>
         </div>
       </div>

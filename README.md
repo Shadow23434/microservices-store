@@ -17,7 +17,7 @@ Browser
 API Gateway (Django)
   |
   +-- /api/customers/        -> customer-service
-  +-- /api/books/            -> book-service
+  +-- /api/products/         -> product-service (supports book, laptop, mobile, cloth)
   +-- /api/carts/            -> cart-service
   +-- /api/staff/            -> staff-service
   +-- /api/managers/         -> manager-service
@@ -37,8 +37,8 @@ Tất cả Django service bên trong Docker network đều chạy trên cổng `
 | ------------------------ | ---------------------- | ----------------------------------- |
 | `api-gateway`            | Web UI + reverse proxy | Entry point của hệ thống            |
 | `customer-service`       | Quản lý khách hàng     | Có liên kết tạo giỏ hàng            |
-| `book-service`           | Quản lý sách           | Dữ liệu sách, tồn kho               |
-| `cart-service`           | Quản lý giỏ hàng       | Phụ thuộc `book-service`            |
+| `product-service`        | Quản lý sản phẩm       | Hỗ trợ book, laptop, mobile, cloth  |
+| `cart-service`           | Quản lý giỏ hàng       | Phụ thuộc `product-service`         |
 | `staff-service`          | Quản lý nhân viên      | CRUD staff                          |
 | `manager-service`        | Quản lý quản lý        | CRUD manager                        |
 | `catalog-service`        | Quản lý danh mục       | Category cho sách                   |
@@ -99,7 +99,7 @@ Lưu ý:
 | URL                                         | Mô tả                  |
 | ------------------------------------------- | ---------------------- |
 | `http://localhost:8888/`                    | Dashboard              |
-| `http://localhost:8888/books/`              | Quản lý sách           |
+| `http://localhost:8888/products/`           | Quản lý sản phẩm       |
 | `http://localhost:8888/customers/`          | Quản lý khách hàng     |
 | `http://localhost:8888/orders/`             | Quản lý đơn hàng       |
 | `http://localhost:8888/staff-page/`         | Quản lý nhân viên      |
@@ -121,7 +121,7 @@ http://localhost:8888/api/<resource>/<id>/
 Danh sách resource đang được gateway proxy:
 
 - `customers`
-- `books`
+- `products` (hỗ trợ book, laptop, mobile, cloth qua query param `?product_type=`)
 - `carts`
 - `staff`
 - `managers`
@@ -135,7 +135,7 @@ Danh sách resource đang được gateway proxy:
 Ví dụ:
 
 ```bash
-curl http://localhost:8888/api/books/
+curl http://localhost:8888/api/products/
 
 curl http://localhost:8888/api/customers/
 
@@ -149,7 +149,7 @@ curl -X POST http://localhost:8888/api/orders/ \
     "customer_id": 1,
     "shipping_address": "123 Nguyen Hue, Quan 1, TP.HCM",
     "items": [
-      {"book_id": 1, "quantity": 1, "unit_price": 320000}
+      {"product_id": 1, "quantity": 1, "unit_price": 320000}
     ]
   }'
 ```
@@ -283,7 +283,6 @@ microservice/
 ├── run_migrations.ps1
 ├── seed_data.ps1
 ├── api-gateway/
-├── book-service/
 ├── cart-service/
 ├── catalog-service/
 ├── comment-rate-service/

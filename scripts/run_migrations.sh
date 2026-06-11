@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # run_migrations.sh
 # Script to run Django migrations for all services via Docker Compose
 
@@ -6,7 +6,7 @@ set -e
 
 services=(
     "customer-service"
-    "book-service"
+    "product-service"
     "cart-service"
     "staff-service"
     "manager-service"

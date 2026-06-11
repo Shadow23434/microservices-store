@@ -31,7 +31,7 @@ function load() {
     const items = Array.isArray(data) ? data : [];
     document.getElementById('cnt').textContent = items.length;
     const tbody = document.getElementById('table-body');
-    if (!items.length) { tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div>Chưa có nhân viên</div></td></tr>'; return; }
+    if (!items.length) { tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><i class="bi bi-person"></i></div><div>Chưa có nhân viên</div></td></tr>'; return; }
     tbody.innerHTML = items.map(function(s) {
       var activeCls = s.is_active ? 'tag-green' : 'tag-red';
       var activeLabel = s.is_active ? 'Hoạt $ộng' : 'Nghỉ';

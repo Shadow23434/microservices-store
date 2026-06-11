@@ -4,7 +4,7 @@ import { Review } from '../types';
 interface ReviewContextType {
   reviews: Review[];
   addReview: (review: Review) => void;
-  getReviewsByBookId: (bookId: number) => Review[];
+  getReviewsByProductId: (productId: number) => Review[];
   getUserReviews: (userId: string) => Review[];
 }
 
@@ -19,9 +19,9 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
     return [
       {
         id: 'rev-1',
-        bookId: 1,
-        bookTitle: "The Midnight Library",
-        bookImage: "https://picsum.photos/seed/bookdetail/400/600",
+        product_id: 1,
+        productName: "The Midnight Library",
+        productImage: "https://picsum.photos/seed/bookdetail/400/600",
         userId: 'user-1',
         userName: 'Jane Doe',
         rating: 5,
@@ -39,8 +39,8 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
     setReviews(prev => [review, ...prev]);
   };
 
-  const getReviewsByBookId = (bookId: number) => {
-    return reviews.filter(r => Number(r.bookId) === Number(bookId));
+  const getReviewsByProductId = (productId: number) => {
+    return reviews.filter(r => Number(r.product_id) === Number(productId));
   };
 
   const getUserReviews = (userId: string) => {
@@ -48,7 +48,7 @@ export function ReviewProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ReviewContext.Provider value={{ reviews, addReview, getReviewsByBookId, getUserReviews }}>
+    <ReviewContext.Provider value={{ reviews, addReview, getReviewsByProductId, getUserReviews }}>
       {children}
     </ReviewContext.Provider>
   );

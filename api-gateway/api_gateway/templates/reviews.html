@@ -3,7 +3,7 @@
 {% block page_title %}<i class="bi bi-star"></i> Đánh giá & Nhận xét{% endblock %}
 {% block content %}
 <div class="form-card">
-  <h3><i class="bi bi-plus-circle"></i> Thêm $ánh giá</h3>
+  <h3><i class="bi bi-plus-circle"></i> Thêm đánh giá</h3>
   <div class="form-row">
     <div class="form-group"><label>Customer ID</label><input id="f-cid" type="number" placeholder="1"></div>
     <div class="form-group"><label>Book ID</label><input id="f-bid" type="number" placeholder="1"></div>
@@ -12,7 +12,7 @@
   <div class="form-row">
     <div class="form-group" style="flex:1"><label>Nhận xét</label><input id="f-comment" placeholder="Sách rất hay!"></div>
   </div>
-  <button class="btn btn-primary" onclick="add()"><i class="bi bi-plus-circle"></i> Gửi $ánh giá</button>
+  <button class="btn btn-primary" onclick="add()"><i class="bi bi-plus-circle"></i> Gửi đánh giá</button>
 </div>
 
 <div class="table-card">
@@ -33,7 +33,7 @@ function load() {
     const items = Array.isArray(data) ? data : [];
     document.getElementById('cnt').textContent = items.length;
     const tbody = document.getElementById('table-body');
-    if (!items.length) { tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i class="bi bi-star"></i></div>Chưa có $ánh giá</div></td></tr>'; return; }
+    if (!items.length) { tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i class="bi bi-star"></i></div>Chưa có đánh giá</div></td></tr>'; return; }
     tbody.innerHTML = items.map(r=>`<tr>
       <td style="color:#888">#${r.id}</td>
       <td>KH #${r.customer_id}</td>
@@ -45,9 +45,9 @@ function load() {
 }
 function add() {
   const body = { customer_id: document.getElementById('f-cid').value, book_id: document.getElementById('f-bid').value, rating: document.getElementById('f-rating').value, comment: document.getElementById('f-comment').value };
-  if (!body.customer_id||!body.book_id||!body.rating) { showToast('Điền $ầy $ủ', false); return; }
+  if (!body.customer_id||!body.book_id||!body.rating) { showToast('Điền đầy đủ thông tin', false); return; }
   fetch('/api/reviews/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
-    .then(r=>r.json()).then(()=>{ showToast('<i class="bi bi-check-circle-fill text-success"></i> Đã gửi $ánh giá!'); load(); });
+    .then(r=>r.json()).then(()=>{ showToast('<i class="bi bi-check-circle-fill text-success"></i> Đã gửi đánh giá!'); load(); });
 }
 load();
 {% endblock %}

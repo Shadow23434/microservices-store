@@ -71,9 +71,15 @@ export interface Product {
   created_at: string;
   updated_at: string;
   detail?: BookDetail | LaptopDetail | MobileDetail | ClothDetail | null;
+  // Normalized display fields (populated by normalizeProduct)
+  title?: string;
+  image?: string;
+  author?: string;
+  category?: string;
+  format?: string;
 }
 
-export interface CartItem extends Book {
+export interface CartItem extends Product {
   quantity: number;
 }
 
@@ -87,9 +93,9 @@ export interface CartItemProduct {
 
 export interface Review {
   id: string;
-  bookId: number;
-  bookTitle: string;
-  bookImage: string;
+  product_id: number;
+  productName: string;
+  productImage: string;
   userId: string;
   userName: string;
   rating: number;

@@ -52,7 +52,7 @@ function load() {
 
 function render(items) {
   const tbody = document.getElementById('table-body');
-  if (!items.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👤</div>Chưa có khách hàng</div></td></tr>'; return; }
+  if (!items.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i class="bi bi-people"></i></div>Chưa có khách hàng</div></td></tr>'; return; }
   tbody.innerHTML = items.map(function(c) {
     return '<tr>' +
       '<td style="color:#888">#' + c.id + '</td>' +

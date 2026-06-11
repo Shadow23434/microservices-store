@@ -47,7 +47,7 @@ export default function Contact() {
                 <div className="ml-4">
                   <h4 className="text-base font-medium text-gray-900 dark:text-white">Our Location</h4>
                   <p className="mt-1 text-gray-600 dark:text-gray-400">
-                    123 Book Street, Reading Avenue<br />
+                    123 Product Street, Reading Avenue<br />
                     Library District, NY 10001
                   </p>
                 </div>

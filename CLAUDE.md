@@ -34,7 +34,6 @@ The API Gateway proxies these routes to respective services:
 
 - `/api/customers/` → customer-service
 - `/api/products/` → product-service (supports book, laptop, mobile, cloth types)
-- `/api/books/` → book-service (legacy - still active during migration)
 - `/api/carts/` → cart-service
 - `/api/staff/` → staff-service
 - `/api/managers/` → manager-service
@@ -49,9 +48,9 @@ The gateway also serves Django template-based admin UI at root paths like `/book
 
 ## Database Architecture
 
-PostgreSQL 16 with 13 separate databases:
+PostgreSQL 16 with 12 separate databases:
 
-- `customer_db`, `product_db`, `book_db` (legacy), `cart_db`, `staff_db`, `manager_db`, `catalog_db`, `order_db`, `ship_db`, `pay_db`, `comment_rate_db`, `recommender_db`, `gateway_db`
+- `customer_db`, `product_db`, `cart_db`, `staff_db`, `manager_db`, `catalog_db`, `order_db`, `ship_db`, `pay_db`, `comment_rate_db`, `recommender_db`, `gateway_db`
 
 All databases are created on first startup via `docker/postgres/init-multiple-db.sh`. Each service connects via `DATABASE_URL` environment variable in the format:
 ```
@@ -97,8 +96,7 @@ docker compose down -v
    - Waits for API Gateway health endpoint to confirm all services are ready
    - Executes `scripts/seed_all_services.py` to populate databases with sample data
    - Seeds categories, books, customers, carts, staff, managers, reviews, orders, payments, shipments
-   - Creates sample products (laptops, mobiles, clothing) via product-service API
-   - Migrates existing books from book-service to product-service
+   - Creates sample products (books, laptops, mobiles, clothing) via product-service API
    - Runs once and exits (does not restart)
 
 **To re-run seeding manually** (if init-data service already completed):
@@ -220,7 +218,7 @@ DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 
 Each service receives:
 - `DATABASE_URL`: PostgreSQL connection string
-- `<SERVICE>_SERVICE_URL`: URLs for services it depends on (e.g., `BOOK_SERVICE_URL=http://book-service:8888`)
+- `<SERVICE>_SERVICE_URL`: URLs for services it depends on (e.g., `PRODUCT_SERVICE_URL=http://product-service:8888`)
 
 These are configured in `docker-compose.yml` under each service's `environment` section.
 

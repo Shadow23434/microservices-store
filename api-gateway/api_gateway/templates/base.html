@@ -122,7 +122,7 @@
 
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <i class="bi bi-book-half"></i>
+    <i class="bi bi-shop"></i>
     <div>
       <h1>Store</h1>
       <p>Microservice Dashboard</p>
@@ -133,7 +133,7 @@
     <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="bi bi-grid-1x2-fill icon"></i> Dashboard</a>
 
     <div class="nav-section">Quản lý</div>
-    <a href="/books/" class="nav-link {% if '/books/' in request.path %}active{% endif %}"><i class="bi bi-book icon"></i> Sách</a>
+    <a href="/products/" class="nav-link {% if '/products/' in request.path or '/books/' in request.path %}active{% endif %}"><i class="bi bi-box-seam icon"></i> Sản phẩm</a>
     <a href="/customers/" class="nav-link {% if '/customers/' in request.path %}active{% endif %}"><i class="bi bi-people icon"></i> Khách hàng</a>
     <a href="/orders/" class="nav-link {% if '/orders/' in request.path %}active{% endif %}"><i class="bi bi-box-seam icon"></i> Đơn hàng</a>
     <a href="/staff-page/" class="nav-link {% if '/staff-page/' in request.path %}active{% endif %}"><i class="bi bi-person-badge icon"></i> Nhân viên</a>
@@ -145,7 +145,7 @@
 
     <div class="nav-section">API</div>
     <a href="/health/" class="nav-link" target="_blank"><i class="bi bi-heart-pulse icon"></i> Health Check</a>
-    <a href="/api/books/" class="nav-link" target="_blank"><i class="bi bi-plug icon"></i> REST API</a>
+    <a href="/api/products/" class="nav-link" target="_blank"><i class="bi bi-plug icon"></i> REST API</a>
   </nav>
   <div class="sidebar-footer">
     <i class="bi bi-activity"></i> 12 services $ang chạy

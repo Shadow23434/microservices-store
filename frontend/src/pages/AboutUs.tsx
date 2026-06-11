@@ -7,7 +7,7 @@ export default function AboutUs() {
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">About Store</h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          We are passionate about bringing the best stories to readers around the world. Our mission is to foster a love for reading and build a community of book enthusiasts.
+          We are passionate about bringing the best stories to readers around the world. Our mission is to foster a love for reading and build a community of e-commerce enthusiasts.
         </p>
       </div>
 

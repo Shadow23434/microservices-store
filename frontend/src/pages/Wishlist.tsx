@@ -17,13 +17,13 @@ export default function Wishlist() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Your wishlist is empty</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md">
-            Looks like you haven't added any books to your wishlist yet. Explore our catalog to find your next great read!
+            Looks like you haven't added any products to your wishlist yet. Explore our catalog to find your next great read!
           </p>
           <Link
             to="/catalog"
             className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
           >
-            Browse Books
+            Browse Products
           </Link>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function Wishlist() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {wishlistItems.map((book) => (
           <div key={book.id} className="bg-white dark:bg-gray-950 rounded-2xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col transition-colors duration-200">
-            <Link to={`/book/${book.id}`} className="block aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 relative group overflow-hidden">
+            <Link to={`/product/${book.id}`} className="block aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 relative group overflow-hidden">
               <img
                 src={book.image}
                 alt={book.title}
@@ -54,7 +54,7 @@ export default function Wishlist() {
               <div className="mb-1">
                 <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">{book.category}</p>
               </div>
-              <Link to={`/book/${book.id}`} className="block mb-1">
+              <Link to={`/product/${book.id}`} className="block mb-1">
                 <h3 className="text-base font-bold text-gray-900 dark:text-white line-clamp-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{book.title}</h3>
               </Link>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{book.author}</p>

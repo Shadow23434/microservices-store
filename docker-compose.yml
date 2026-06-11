@@ -14,7 +14,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_MULTIPLE_DATABASES: >
-        customer_db,book_db,product_db,cart_db,staff_db,manager_db,
+        customer_db,product_db,cart_db,staff_db,manager_db,
         catalog_db,order_db,ship_db,pay_db,
         comment_rate_db,recommender_db,gateway_db
     volumes:
@@ -44,17 +44,6 @@ services:
         condition: service_healthy
       cart-service:
         condition: service_started
-
-  book-service:
-    build:
-      context: .
-      dockerfile: book-service/Dockerfile
-    env_file: .env
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/book_db
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   product-service:
     build:
@@ -195,7 +184,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/gateway_db
       CUSTOMER_SERVICE_URL: http://customer-service:8888
       PRODUCT_SERVICE_URL: http://product-service:8888
-      BOOK_SERVICE_URL: http://book-service:8888
       CART_SERVICE_URL: http://cart-service:8888
       STAFF_SERVICE_URL: http://staff-service:8888
       MANAGER_SERVICE_URL: http://manager-service:8888
@@ -210,7 +198,7 @@ services:
         condition: service_healthy
       customer-service:
         condition: service_started
-      book-service:
+      product-service:
         condition: service_started
       cart-service:
         condition: service_started

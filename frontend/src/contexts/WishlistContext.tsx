@@ -1,17 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Book } from '../types';
+import { Product } from '../types';
+import { normalizeProduct } from '../utils/normalizeProduct';
 
 interface WishlistContextType {
-  wishlistItems: Book[];
-  addToWishlist: (book: Book) => void;
-  removeFromWishlist: (bookId: number | string) => void;
-  isInWishlist: (bookId: number | string) => boolean;
+  wishlistItems: Product[];
+  addToWishlist: (product: Product) => void;
+  removeFromWishlist: (productId: number | string) => void;
+  isInWishlist: (productId: number | string) => boolean;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [wishlistItems, setWishlistItems] = useState<Book[]>(() => {
+  const [wishlistItems, setWishlistItems] = useState<Product[]>(() => {
     const saved = localStorage.getItem('wishlist');
     return saved ? JSON.parse(saved) : [];
   });
@@ -20,21 +21,22 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
-  const addToWishlist = (book: Book) => {
+  const addToWishlist = (product: Product) => {
     setWishlistItems((prev) => {
-      if (!prev.some((item) => Number(item.id) === Number(book.id))) {
-        return [...prev, book];
+      if (!prev.some((item) => Number(item.id) === Number(product.id))) {
+        const normalized = normalizeProduct(product);
+        return [...prev, normalized];
       }
       return prev;
     });
   };
 
-  const removeFromWishlist = (bookId: number | string) => {
-    setWishlistItems((prev) => prev.filter((item) => Number(item.id) !== Number(bookId)));
+  const removeFromWishlist = (productId: number | string) => {
+    setWishlistItems((prev) => prev.filter((item) => Number(item.id) !== Number(productId)));
   };
 
-  const isInWishlist = (bookId: number | string) => {
-    return wishlistItems.some((item) => Number(item.id) === Number(bookId));
+  const isInWishlist = (productId: number | string) => {
+    return wishlistItems.some((item) => Number(item.id) === Number(productId));
   };
 
   return (

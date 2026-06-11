@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="form-card">
-  <h3><i class="bi bi-plus-circle"></i> Tạo $ơn hàng mới</h3>
+  <h3><i class="bi bi-plus-circle"></i> Tạo đơn hàng mới</h3>
 
   <div class="form-row">
     <div class="form-group" style="flex:1">
@@ -18,7 +18,7 @@
   </div>
 
   <div style="border-top:1px solid #eee;margin-top:12px;padding-top:16px">
-    <h4 style="margin:0 0 10px;font-size:14px;color:#555"><i class="bi bi-book-half"></i> Thêm sản phẩm vào $ơn</h4>
+    <h4 style="margin:0 0 10px;font-size:14px;color:#555"><i class="bi bi-book-half"></i> Thêm sản phẩm vào đơn</h4>
     <div class="form-row" style="align-items:flex-end">
       <div class="form-group" style="flex:3">
         <label>Chọn sách</label>
@@ -53,13 +53,13 @@
   </div>
 
   <div style="margin-top:16px">
-    <button class="btn btn-primary" onclick="submitOrder()"><i class="bi bi-cart"></i> Tạo $ơn hàng</button>
+    <button class="btn btn-primary" onclick="submitOrder()"><i class="bi bi-cart"></i> Tạo đơn hàng</button>
   </div>
 </div>
 
 <div class="table-card">
   <div class="table-header">
-    <h3>Danh sách $ơn hàng (<span id="cnt">0</span>)</h3>
+    <h3>Danh sách đơn hàng (<span id="cnt">0</span>)</h3>
   </div>
   <table>
     <thead><tr><th>ID</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Địa chỉ</th><th>Trạng thái</th><th>Ngày tạo</th></tr></thead>
@@ -151,7 +151,7 @@ function load() {
     var orders = Array.isArray(data) ? data : (Array.isArray(data && data.results) ? data.results : []);
     document.getElementById('cnt').textContent = orders.length;
     var tbody = document.getElementById('table-body');
-    if (!orders.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div>Chưa có $ơn hàng</div></td></tr>'; return; }
+    if (!orders.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i class="bi bi-box-seam"></i></div>Chưa có đơn hàng</div></td></tr>'; return; }
     tbody.innerHTML = orders.map(function(o) {
       var st = o.status || 'pending';
       var cls = statusMap[st] || 'tag-blue';
@@ -187,7 +187,7 @@ function submitOrder() {
   fetch('/api/orders/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
     .then(function(r) { if(!r.ok) return r.json().then(function(e) { throw e; }); return r.json(); })
     .then(function() {
-      showToast('Tao don hang thanh cong! Tong: ' + Number(total).toLocaleString('vi-VN') + ' d');
+      showToast('Tao don hang thanh cong! Tong: ' + Number(total).toLocaleString('vi-VN') + ' $');
       orderItems = [];
       renderItems();
       document.getElementById('f-cid').value = '';
