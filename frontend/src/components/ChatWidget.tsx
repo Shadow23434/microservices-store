@@ -265,11 +265,7 @@ export default function ChatWidget() {
               {[
                 'Laptop under $1600',
                 'Self-help books',
-                'Gaming laptops',
                 'Smartphones',
-                'Free shipping?',
-                'Return policy',
-                'Payment methods',
               ].map((q) => (
                 <button
                   key={q}
