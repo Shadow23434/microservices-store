@@ -180,7 +180,7 @@ class HealthCheck(APIView):
             "shipments": f"{SERVICES['shipments']}/shipments/",
             "payments": f"{SERVICES['payments']}/payments/",
             "reviews": f"{SERVICES['reviews']}/reviews/",
-            "recommendations": f"{SERVICES['recommender']}/recommendations/1/",
+            "recommendations": f"{SERVICES['recommender']}/health/",
         }
         results = {}
         for name, endpoint in health_endpoints.items():
