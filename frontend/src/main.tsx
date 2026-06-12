@@ -30,7 +30,7 @@ root.render(
   <React.StrictMode>
     <Analytics />
     <AuthProvider>
-      <ThemeProvider defaultTheme="system">
+      <ThemeProvider defaultTheme="light">
         <OrderProvider>
           <ReviewProvider>
             <CartProvider>

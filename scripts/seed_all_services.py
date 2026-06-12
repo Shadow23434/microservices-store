@@ -33,7 +33,7 @@ POSTGRES_HOST     = os.getenv('POSTGRES_HOST', '127.0.0.1')
 POSTGRES_PORT     = os.getenv('POSTGRES_PORT', '5432')
 
 # ── HTTP Service URLs ──────────────────────────────────────────────────────────
-PRODUCT_SERVICE_URL = "http://api-gateway:8888/api/products/"
+PRODUCT_SERVICE_URL = os.getenv('PRODUCT_SERVICE_URL', 'http://api-gateway:8888/api/products/')
 
 # ── DB connection strings ──────────────────────────────────────────────────────
 def get_db_url(db_name):

@@ -1,9 +1,14 @@
 /// <reference types="vite/client" />
 import axios from 'axios';
 
-// Tất cả request $i qua API Gateway tại localhost:8888
+// Tự động detect môi trường:
+// - Production (deployed): dùng relative path (Vercel rewrite hoặc same-origin)
+// - Development: dùng localhost:8888 (API Gateway local)
+const isProduction = import.meta.env.PROD;
+const defaultBaseURL = isProduction ? '' : 'http://localhost:8888';
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8888',
+  baseURL: import.meta.env.VITE_API_BASE_URL || defaultBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },

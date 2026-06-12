@@ -128,11 +128,15 @@ class GatewayView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         base_url = SERVICES[resource]
-        # Only product-service uses /api/ prefix; all others mount at root
+        # Build the path to forward to the backend service.
+        # - product-service mounts at /api/products/...
+        # - All other services mount their endpoints at root (no service-name prefix)
+        #   e.g. catalog-service: /categories/, recommender: /recommendations/...
+        #   The gateway resource name (catalog, recommender) is NOT part of the backend path.
         if resource == "products":
             full_path = f"api/products/{path}" if path else "api/products/"
         else:
-            full_path = f"{resource}/{path}" if path else f"{resource}/"
+            full_path = path if path else ""
         return _proxy(request, base_url, full_path)
 
     def get(self, request, resource, path=""):
