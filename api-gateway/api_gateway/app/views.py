@@ -10,6 +10,7 @@ SERVICES = {
     "customers": os.environ.get("CUSTOMER_SERVICE_URL", "http://localhost:8881"),
     "products": os.environ.get("PRODUCT_SERVICE_URL", "http://localhost:8882"),
     "carts": os.environ.get("CART_SERVICE_URL", "http://localhost:8883"),
+    "categories": os.environ.get("CATALOG_SERVICE_URL", "http://localhost:8884"),
     "catalog": os.environ.get("CATALOG_SERVICE_URL", "http://localhost:8884"),
     "orders": os.environ.get("ORDER_SERVICE_URL", "http://localhost:8885"),
     "shipments": os.environ.get("SHIP_SERVICE_URL", "http://localhost:8886"),
@@ -19,6 +20,9 @@ SERVICES = {
     ),
     "staff": os.environ.get("STAFF_SERVICE_URL", "http://localhost:8889"),
     "managers": os.environ.get("MANAGER_SERVICE_URL", "http://localhost:8890"),
+    "recommendations": os.environ.get(
+        "RECOMMENDER_SERVICE_URL", "http://localhost:8891"
+    ),
     "recommender": os.environ.get(
         "RECOMMENDER_SERVICE_URL", "http://localhost:8891"
     ),
