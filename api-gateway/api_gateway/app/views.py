@@ -160,12 +160,12 @@ class HealthCheck(APIView):
             "carts": f"{SERVICES['carts']}/carts/1/",
             "staff": f"{SERVICES['staff']}/staff/",
             "managers": f"{SERVICES['managers']}/managers/",
-            "categories": f"{SERVICES['categories']}/categories/",
+            "categories": f"{SERVICES['catalog']}/categories/",
             "orders": f"{SERVICES['orders']}/orders/",
             "shipments": f"{SERVICES['shipments']}/shipments/",
             "payments": f"{SERVICES['payments']}/payments/",
             "reviews": f"{SERVICES['reviews']}/reviews/",
-            "recommendations": f"{SERVICES['recommendations']}/recommendations/1/",
+            "recommendations": f"{SERVICES['recommender']}/recommendations/1/",
         }
         results = {}
         for name, endpoint in health_endpoints.items():

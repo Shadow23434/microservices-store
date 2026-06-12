@@ -21,12 +21,14 @@ import ScanToPay from './pages/ScanToPay';
 import AboutUs from './pages/AboutUs';
 import Contact from './pages/Contact';
 import Wishlist from './pages/Wishlist';
+import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 
 const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <React.StrictMode>
+    <Analytics />
     <AuthProvider>
       <ThemeProvider defaultTheme="system">
         <OrderProvider>

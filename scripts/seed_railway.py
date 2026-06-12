@@ -48,15 +48,15 @@ def wait_for_databases():
     print("Waiting for databases to be ready...")
 
     checks = [
-        ('catalog_db', 'catalog_service_category'),
-        ('customer_db', 'customer_service_customer'),
-        ('cart_db', 'cart_service_cart'),
-        ('staff_db', 'staff_service_staff'),
-        ('manager_db', 'manager_service_manager'),
-        ('comment_rate_db', 'comment_rate_service_review'),
-        ('order_db', 'order_service_order'),
-        ('pay_db', 'pay_service_payment'),
-        ('ship_db', 'ship_service_shipment'),
+        ('catalog_db', 'app_category'),
+        ('customer_db', 'app_customer'),
+        ('cart_db', 'app_cart'),
+        ('staff_db', 'app_staff'),
+        ('manager_db', 'app_manager'),
+        ('comment_rate_db', 'app_review'),
+        ('order_db', 'app_order'),
+        ('pay_db', 'app_payment'),
+        ('ship_db', 'app_shipment'),
     ]
 
     for db_name, table in checks:
@@ -100,7 +100,7 @@ def seed_categories():
 
     for name, description, applicable_types in categories:
         cur.execute(
-            """INSERT INTO catalog_service_category
+            """INSERT INTO app_category
                (name, description, applicable_types, created_at)
                VALUES (%s, %s, %s, %s)
                ON CONFLICT DO NOTHING""",
@@ -130,7 +130,7 @@ def seed_customers():
 
     for name, email in customers:
         cur.execute(
-            """INSERT INTO customer_service_customer (name, email)
+            """INSERT INTO app_customer (name, email)
                VALUES (%s, %s)
                ON CONFLICT (email) DO NOTHING""",
             (name, email)
@@ -149,7 +149,7 @@ def seed_carts():
     # Get customer IDs from customer_db
     conn_customer = get_connection('customer_db')
     cur_customer = conn_customer.cursor()
-    cur_customer.execute("SELECT id FROM customer_service_customer")
+    cur_customer.execute("SELECT id FROM app_customer")
     customer_ids = [row[0] for row in cur_customer.fetchall()]
     cur_customer.close()
     conn_customer.close()
@@ -160,10 +160,10 @@ def seed_carts():
 
     for customer_id in customer_ids:
         cur_cart.execute(
-            """INSERT INTO cart_service_cart (customer_id)
-               VALUES (%s)
+            """INSERT INTO app_cart (customer_id, created_at)
+               VALUES (%s, %s)
                ON CONFLICT DO NOTHING""",
-            (customer_id,)
+            (customer_id, datetime.now())
         )
 
     conn_cart.commit()
@@ -187,11 +187,11 @@ def seed_staff():
 
     for name, email, role, employee_id in staff_list:
         cur.execute(
-            """INSERT INTO staff_service_staff
-               (name, email, role, employee_id, is_active)
-               VALUES (%s, %s, %s, %s, true)
+            """INSERT INTO app_staff
+               (name, email, role, employee_id, is_active, created_at)
+               VALUES (%s, %s, %s, %s, true, %s)
                ON CONFLICT (employee_id) DO NOTHING""",
-            (name, email, role, employee_id)
+            (name, email, role, employee_id, datetime.now())
         )
 
     conn.commit()
@@ -215,11 +215,11 @@ def seed_managers():
 
     for name, email, department, employee_id in managers:
         cur.execute(
-            """INSERT INTO manager_service_manager
-               (name, email, department, employee_id, is_active)
-               VALUES (%s, %s, %s, %s, true)
+            """INSERT INTO app_manager
+               (name, email, department, employee_id, is_active, created_at)
+               VALUES (%s, %s, %s, %s, true, %s)
                ON CONFLICT (employee_id) DO NOTHING""",
-            (name, email, department, employee_id)
+            (name, email, department, employee_id, datetime.now())
         )
 
     conn.commit()
@@ -418,7 +418,7 @@ def seed_reviews():
     # Get customer IDs
     conn_customer = get_connection('customer_db')
     cur_customer = conn_customer.cursor()
-    cur_customer.execute("SELECT id FROM customer_service_customer")
+    cur_customer.execute("SELECT id FROM app_customer")
     customer_ids = [row[0] for row in cur_customer.fetchall()]
     cur_customer.close()
     conn_customer.close()
@@ -443,11 +443,11 @@ def seed_reviews():
 
     for customer_id, product_id, product_type, rating, comment in reviews:
         cur.execute(
-            """INSERT INTO comment_rate_service_review
-               (customer_id, product_id, product_type, rating, comment)
-               VALUES (%s, %s, %s, %s, %s)
+            """INSERT INTO app_review
+               (customer_id, product_id, product_type, rating, comment, created_at, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)
                ON CONFLICT (customer_id, product_id) DO NOTHING""",
-            (customer_id, product_id, product_type, rating, comment)
+            (customer_id, product_id, product_type, rating, comment, datetime.now(), datetime.now())
         )
 
     conn.commit()
@@ -463,7 +463,7 @@ def seed_orders():
     # Get customer IDs
     conn_customer = get_connection('customer_db')
     cur_customer = conn_customer.cursor()
-    cur_customer.execute("SELECT id FROM customer_service_customer")
+    cur_customer.execute("SELECT id FROM app_customer")
     customer_ids = [row[0] for row in cur_customer.fetchall()]
     cur_customer.close()
     conn_customer.close()
@@ -501,13 +501,15 @@ def seed_orders():
     created_orders = 0
     for order_data in orders_data:
         # Insert order
+        now = datetime.now()
         cur_order.execute(
-            """INSERT INTO order_service_order
-               (customer_id, status, total_amount, shipping_address)
-               VALUES (%s, %s, %s, %s)
+            """INSERT INTO app_order
+               (customer_id, status, total_amount, shipping_address, created_at, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s)
                RETURNING id""",
             (order_data['customer_id'], order_data['status'],
-             order_data['total_amount'], order_data['shipping_address'])
+             order_data['total_amount'], order_data['shipping_address'],
+             now, now)
         )
         order_id = cur_order.fetchone()[0]
         created_orders += 1
@@ -515,7 +517,7 @@ def seed_orders():
         # Insert order items
         for item in order_data['items']:
             cur_order.execute(
-                """INSERT INTO order_service_orderitem
+                """INSERT INTO app_orderitem
                    (order_id, product_id, product_name, product_type, quantity, unit_price)
                    VALUES (%s, %s, %s, %s, %s, %s)""",
                 (order_id, item['product_id'], item['product_name'],
@@ -526,11 +528,12 @@ def seed_orders():
         conn_pay = get_connection('pay_db')
         cur_pay = conn_pay.cursor()
         cur_pay.execute(
-            """INSERT INTO pay_service_payment
-               (order_id, customer_id, amount, method, status)
-               VALUES (%s, %s, %s, %s, %s)""",
+            """INSERT INTO app_payment
+               (order_id, customer_id, amount, method, status, created_at, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
             (order_id, order_data['customer_id'], order_data['total_amount'],
-             'credit_card', 'completed' if order_data['status'] == 'completed' else 'pending')
+             'credit_card', 'completed' if order_data['status'] == 'completed' else 'pending',
+             now, now)
         )
         conn_pay.commit()
         cur_pay.close()
@@ -540,12 +543,13 @@ def seed_orders():
         conn_ship = get_connection('ship_db')
         cur_ship = conn_ship.cursor()
         cur_ship.execute(
-            """INSERT INTO ship_service_shipment
-               (order_id, customer_id, address, tracking_number, status)
-               VALUES (%s, %s, %s, %s, %s)""",
+            """INSERT INTO app_shipment
+               (order_id, customer_id, address, tracking_number, status, created_at, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
             (order_id, order_data['customer_id'], order_data['shipping_address'],
              str(uuid.uuid4()),
-             'delivered' if order_data['status'] == 'completed' else 'processing')
+             'delivered' if order_data['status'] == 'completed' else 'processing',
+             now, now)
         )
         conn_ship.commit()
         cur_ship.close()
