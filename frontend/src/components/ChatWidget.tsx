@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, X, Send, Sparkles, Star, Loader2, Bot } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles, Star, Loader2, Bot, Laptop, BookOpen, Smartphone, Shirt, Truck, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import recommenderService from '../api/recommenderService';
 
@@ -261,20 +261,56 @@ export default function ChatWidget() {
 
           {/* Quick Questions */}
           {messages.length <= 1 && (
-            <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex gap-2 overflow-x-auto">
-              {[
-                'Laptop under $600',
-                'Self-help books',
-                'Free shipping?',
-              ].map((q) => (
-                <button
-                  key={q}
-                  onClick={() => handleQuickQuestion(q)}
-                  className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full whitespace-nowrap transition-colors border border-gray-200 dark:border-gray-700"
-                >
-                  {q}
-                </button>
-              ))}
+            <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 max-h-[240px] overflow-y-auto">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                Quick Questions
+              </p>
+
+              {/* Products */}
+              <div className="mb-3">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">🛍️ Products</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { text: 'Laptop under $600', icon: Laptop },
+                    { text: 'Self-help books', icon: BookOpen },
+                    { text: 'Gaming laptops', icon: Laptop },
+                    { text: 'Latest smartphones', icon: Smartphone },
+                    { text: 'Manga & comics', icon: BookOpen },
+                    { text: 'Winter clothing', icon: Shirt },
+                  ].map((q) => (
+                    <button
+                      key={q.text}
+                      onClick={() => handleQuickQuestion(q.text)}
+                      className="flex items-center gap-1.5 text-xs px-2.5 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition-colors border border-gray-200 dark:border-gray-700 text-left"
+                    >
+                      <q.icon className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                      <span className="line-clamp-2">{q.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Store Info */}
+              <div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">ℹ️ Store Info</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { text: 'Free shipping?', icon: Truck },
+                    { text: 'Return policy', icon: Truck },
+                    { text: 'Payment methods', icon: CreditCard },
+                    { text: 'Delivery time', icon: Truck },
+                  ].map((q) => (
+                    <button
+                      key={q.text}
+                      onClick={() => handleQuickQuestion(q.text)}
+                      className="flex items-center gap-1.5 text-xs px-2.5 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg transition-colors border border-gray-200 dark:border-gray-700 text-left"
+                    >
+                      <q.icon className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                      <span className="line-clamp-2">{q.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
