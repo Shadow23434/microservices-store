@@ -36,6 +36,11 @@ def search_products(filters):
     Keyword filters are soft — fall back to broader matching if too specific.
     """
     try:
+        # If no meaningful filters extracted (greetings, general chat), don't search
+        has_filters = any(filters.get(k) for k in ("product_type", "category_id", "price_min", "price_max", "keywords"))
+        if not has_filters:
+            return []
+
         params = {}
         if filters.get("product_type"):
             params["product_type"] = filters["product_type"]
