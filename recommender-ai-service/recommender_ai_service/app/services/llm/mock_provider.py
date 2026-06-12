@@ -33,8 +33,20 @@ class MockLLMProvider(BaseLLMProvider):
                 f"{product_list}. Would you like to see details of any specific product?"
             )
 
-        # No matching products
+        # No matching products — give a helpful response instead of generic "sorry"
+        msg_lower = message.lower().strip()
+
+        # Greetings / general conversation
+        greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "xin chao", "chao"]
+        if any(g in msg_lower for g in greetings):
+            return (
+                "Hello! Welcome to BookStore. We have books, laptops, phones, and clothing. "
+                "What are you looking for today?"
+            )
+
+        # Suggest browsing categories
         return (
-            "Sorry, I couldn't find any products matching your request. "
-            "Could you provide more details about the product type, price range, or features you're looking for?"
+            "I couldn't find an exact match, but our store offers books, laptops, phones, and clothing. "
+            "Try asking about a specific product type, like 'show me books' or 'I need a laptop'. "
+            "You can also specify a price range!"
         )

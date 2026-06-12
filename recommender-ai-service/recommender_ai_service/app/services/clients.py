@@ -32,6 +32,7 @@ def search_products(filters):
     """
     Search products with filters (for chatbot).
     Filters may include: product_type, category_id, price_min, price_max, keywords.
+    Falls back to broader search if keyword filter yields no results.
     """
     try:
         params = {}
@@ -49,17 +50,38 @@ def search_products(filters):
         products = response.json()
 
         # Filter by price on the Python side (product-service doesn't support price filtering)
+        price_filtered = products
         if filters.get("price_min"):
-            products = [p for p in products if float(p.get("price", 0)) >= float(filters["price_min"])]
+            price_filtered = [p for p in price_filtered if float(p.get("price", 0)) >= float(filters["price_min"])]
         if filters.get("price_max"):
-            products = [p for p in products if float(p.get("price", 0)) <= float(filters["price_max"])]
+            price_filtered = [p for p in price_filtered if float(p.get("price", 0)) <= float(filters["price_max"])]
 
         # Filter by keywords (match in product name)
         if filters.get("keywords"):
             keywords = filters["keywords"].lower()
-            products = [p for p in products if keywords in p.get("name", "").lower()]
+            keyword_matched = [p for p in price_filtered if keywords in p.get("name", "").lower()]
+            # Fallback: if keyword matching eliminates all products, try matching
+            # each keyword individually instead of the full phrase
+            if not keyword_matched:
+                individual_words = keywords.split()
+                scored = {}
+                for p in price_filtered:
+                    name = p.get("name", "").lower()
+                    score = sum(1 for w in individual_words if w in name)
+                    if score > 0:
+                        scored[p.get("id")] = (score, p)
+                if scored:
+                    # Sort by match score descending
+                    keyword_matched = [item[1] for item in sorted(scored.values(), key=lambda x: -x[0])]
+                else:
+                    # Last fallback: return price-filtered products without keyword filter
+                    keyword_matched = price_filtered
 
-        return products
+            return keyword_matched
+
+        # Final fallback: if price filter eliminated everything, return all products
+        # so the LLM (or mock) always has something to work with
+        return price_filtered if price_filtered else products
     except Exception as e:
         print(f"Error searching products: {e}")
         return []
