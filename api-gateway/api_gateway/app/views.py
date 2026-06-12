@@ -7,23 +7,23 @@ from rest_framework.response import Response
 from rest_framework import status
 
 SERVICES = {
-    "customers": os.environ.get("CUSTOMER_SERVICE_URL", "http://customer-service:8888"),
-    "products": os.environ.get("PRODUCT_SERVICE_URL", "http://product-service:8888"),
-    "carts": os.environ.get("CART_SERVICE_URL", "http://cart-service:8888"),
-    "staff": os.environ.get("STAFF_SERVICE_URL", "http://staff-service:8888"),
-    "managers": os.environ.get("MANAGER_SERVICE_URL", "http://manager-service:8888"),
-    "categories": os.environ.get("CATALOG_SERVICE_URL", "http://catalog-service:8888"),
-    "orders": os.environ.get("ORDER_SERVICE_URL", "http://order-service:8888"),
-    "shipments": os.environ.get("SHIP_SERVICE_URL", "http://ship-service:8888"),
-    "payments": os.environ.get("PAY_SERVICE_URL", "http://pay-service:8888"),
+    "customers": os.environ.get("CUSTOMER_SERVICE_URL", "http://localhost:8881"),
+    "products": os.environ.get("PRODUCT_SERVICE_URL", "http://localhost:8882"),
+    "carts": os.environ.get("CART_SERVICE_URL", "http://localhost:8883"),
+    "catalog": os.environ.get("CATALOG_SERVICE_URL", "http://localhost:8884"),
+    "orders": os.environ.get("ORDER_SERVICE_URL", "http://localhost:8885"),
+    "shipments": os.environ.get("SHIP_SERVICE_URL", "http://localhost:8886"),
+    "payments": os.environ.get("PAY_SERVICE_URL", "http://localhost:8887"),
     "reviews": os.environ.get(
-        "COMMENT_RATE_SERVICE_URL", "http://comment-rate-service:8888"
+        "COMMENT_RATE_SERVICE_URL", "http://localhost:8888"
     ),
-    "recommendations": os.environ.get(
-        "RECOMMENDER_SERVICE_URL", "http://recommender-ai-service:8888"
+    "staff": os.environ.get("STAFF_SERVICE_URL", "http://localhost:8889"),
+    "managers": os.environ.get("MANAGER_SERVICE_URL", "http://localhost:8890"),
+    "recommender": os.environ.get(
+        "RECOMMENDER_SERVICE_URL", "http://localhost:8891"
     ),
     "chat": os.environ.get(
-        "RECOMMENDER_SERVICE_URL", "http://recommender-ai-service:8888"
+        "RECOMMENDER_SERVICE_URL", "http://localhost:8891"
     ),
 }
 
