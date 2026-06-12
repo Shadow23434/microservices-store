@@ -15,7 +15,7 @@ SERVICES = {
     "shipments": os.environ.get("SHIP_SERVICE_URL", "http://localhost:8886"),
     "payments": os.environ.get("PAY_SERVICE_URL", "http://localhost:8887"),
     "reviews": os.environ.get(
-        "COMMENT_RATE_SERVICE_URL", "http://localhost:8888"
+        "COMMENT_RATE_SERVICE_URL", "http://localhost:8892"
     ),
     "staff": os.environ.get("STAFF_SERVICE_URL", "http://localhost:8889"),
     "managers": os.environ.get("MANAGER_SERVICE_URL", "http://localhost:8890"),

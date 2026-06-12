@@ -1,7 +1,10 @@
 FROM python:3.10-slim
 
-# Install supervisor for managing multiple processes
-RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+# Install supervisor and bash for managing multiple processes
+RUN apt-get update && apt-get install -y supervisor bash && rm -rf /var/lib/apt/lists/*
+
+# Create supervisor log directory
+RUN mkdir -p /var/log/supervisor
 
 WORKDIR /app
 

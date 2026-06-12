@@ -33,6 +33,7 @@ local_settings.py
 
 # Environment files
 .env
+.env.railway
 
 # Docker overrides, local compose
 docker-compose.override.yml
