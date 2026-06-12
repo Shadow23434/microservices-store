@@ -96,28 +96,53 @@ export default function Home() {
       let recsToProcess = [];
       if (user?.id) {
         // Gửi API recommender thật nếu user đã đăng nhập
-        const recs = await recommenderService.getRecommendations(user.id) as unknown as any[];
-        recsToProcess = Array.isArray(recs) ? recs.slice(0, 3) : [];
+        const response = await recommenderService.getRecommendations(user.id) as any;
+        // New API returns { recommendations: [...] }
+        if (response?.recommendations && Array.isArray(response.recommendations)) {
+          recsToProcess = response.recommendations.slice(0, 3);
+        } else if (Array.isArray(response)) {
+          // Fallback for old API format
+          recsToProcess = response.slice(0, 3);
+        }
       } else {
         // Fallback: lấy random 3 sách từ danh sách
         const allBooks = await productService.getBooks() as unknown as any[];
         const shuffled = [...(allBooks || [])].sort(() => 0.5 - Math.random());
         recsToProcess = shuffled.slice(0, 3);
       }
-      
-      const recsWithRating = await Promise.all(
-        recsToProcess.map(async (product: any) => {
+
+      // Enrich recommendations with product details and ratings
+      const recsWithDetails = await Promise.all(
+        recsToProcess.map(async (rec: any) => {
           try {
-            const ratingData = await reviewService.getBookRating(product.id) as any;
-            if (ratingData && ratingData.average_rating !== null) {
-              return { ...product, rating: ratingData.average_rating, reviews: ratingData.total_reviews };
+            // Get product details if we only have product_id
+            const productId = rec.product_id || rec.id;
+            let productData = rec;
+
+            if (!rec.name && !rec.title) {
+              const product = await productService.getProductById(productId);
+              productData = { ...rec, ...product };
             }
-          } catch(e) {}
-          return product;
+
+            // Get rating if not already provided
+            if (!rec.average_rating) {
+              try {
+                const ratingData = await reviewService.getProductRating(productId) as any;
+                if (ratingData && ratingData.average_rating !== null) {
+                  productData.average_rating = ratingData.average_rating;
+                  productData.total_reviews = ratingData.total_reviews;
+                }
+              } catch(e) {}
+            }
+
+            return productData;
+          } catch(e) {
+            return rec;
+          }
         })
       );
 
-      setRecommendations(recsWithRating);
+      setRecommendations(recsWithDetails);
     } catch (err) {
       console.error('Failed to get recommendations:', err);
       // Fallback to featured products subset
@@ -317,29 +342,40 @@ export default function Home() {
           <div className="md:w-1/2 relative min-h-[300px] flex items-center justify-center">
             {recommendations.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {recommendations.map((book: any) => (
-                  <Link key={book.id} to={`/product/${book.id}`} className="group flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-800">
-                    <div className="aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 overflow-hidden">
-                      <img
-                        src={book.image || book.cover_image || `https://picsum.photos/seed/book${book.id}/200/300`}
-                        alt={book.title}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="p-3 flex flex-col flex-grow">
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">{book.title}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-1">{book.author}</p>
-                      <div className="mt-auto flex items-center justify-between">
-                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">${book.price || '0.00'}</span>
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">{Number(book.rating || 0).toFixed(1)}</span>
+                {recommendations.map((rec: any) => {
+                  const productId = rec.product_id || rec.id;
+                  const title = rec.name || rec.title || 'Product';
+                  const price = rec.price || '0.00';
+                  const rating = rec.average_rating || rec.rating || 0;
+                  const image = rec.image_url || rec.image || rec.cover_image || `https://picsum.photos/seed/product${productId}/200/300`;
+                  const reason = rec.reason || '';
+
+                  return (
+                    <Link key={productId} to={`/product/${productId}`} className="group flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-800">
+                      <div className="aspect-w-2 aspect-h-3 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                        <img
+                          src={image}
+                          alt={title}
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="p-3 flex flex-col flex-grow">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">{title}</h3>
+                        {reason && (
+                          <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-2 line-clamp-2 italic">{reason}</p>
+                        )}
+                        <div className="mt-auto flex items-center justify-between">
+                          <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">${price}</span>
+                          <div className="flex items-center">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">{Number(rating).toFixed(1)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 w-full max-w-[300px] mx-auto transition-opacity duration-300" style={{ opacity: isGenerating ? 0.3 : 1 }}>

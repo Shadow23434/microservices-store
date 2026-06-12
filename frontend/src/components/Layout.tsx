@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
 import Logo from './Logo';
+import ChatWidget from './ChatWidget';
 
 export default function Layout() {
   const { theme, setTheme } = useTheme();
@@ -271,6 +272,9 @@ export default function Layout() {
           </div>
         </div>
       </footer>
+
+      {/* AI Chat Widget */}
+      <ChatWidget />
     </div>
   );
 }

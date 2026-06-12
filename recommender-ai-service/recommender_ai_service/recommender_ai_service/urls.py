@@ -1,29 +1,39 @@
 """
 URL configuration for recommender_ai_service project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+Gateway routing:
+  /api/recommendations/... → recommender-ai-service/recommendations/...
+  /api/chat/...            → recommender-ai-service/chat/...
 """
 
 from django.contrib import admin
 from django.urls import path
-from app.views import RecommendationView
+from app.views import (
+    RecommendationView,
+    SimilarProductsView,
+    WishlistView,
+    WishlistItemView,
+    ChatView,
+    ChatHistoryView,
+    HealthCheckView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "recommendations/<int:customer_id>/",
-        RecommendationView.as_view(),
-        name="recommendations",
-    ),
+
+    # Health check
+    path("health/", HealthCheckView.as_view(), name="health-check"),
+
+    # Recommendation endpoints (gateway strips /api/ prefix)
+    path("recommendations/<int:customer_id>/", RecommendationView.as_view(), name="recommendations"),
+    path("recommendations/similar/<int:product_id>/", SimilarProductsView.as_view(), name="similar-products"),
+
+    # Wishlist endpoints
+    path("recommendations/wishlist/", WishlistView.as_view(), name="wishlist-list"),
+    path("recommendations/wishlist/<int:customer_id>/<int:product_id>/",
+         WishlistItemView.as_view(), name="wishlist-item"),
+
+    # Chat endpoints
+    path("chat/", ChatView.as_view(), name="chat"),
+    path("chat/<int:conversation_id>/", ChatHistoryView.as_view(), name="chat-history"),
 ]

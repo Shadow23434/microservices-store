@@ -6,6 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import productService from '../api/productService';
 import reviewService from '../api/reviewService';
+import recommenderService from '../api/recommenderService';
 
 // Product type labels
 const TYPE_LABELS: Record<string, string> = {
@@ -36,6 +37,8 @@ export default function ProductDetail() {
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [error, setError] = useState('');
+  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
   // Load product info from API
   useEffect(() => {
@@ -101,6 +104,26 @@ export default function ProductDetail() {
     };
     loadReviews();
   }, [activeTab, id]);
+
+  // Load similar products
+  useEffect(() => {
+    if (!id) return;
+    const loadSimilar = async () => {
+      setIsLoadingSimilar(true);
+      try {
+        const response = await recommenderService.getSimilarProducts(Number(id)) as any;
+        if (response?.similar_products && Array.isArray(response.similar_products)) {
+          setSimilarProducts(response.similar_products.slice(0, 4));
+        }
+      } catch (err) {
+        console.error('Failed to load similar products:', err);
+        setSimilarProducts([]);
+      } finally {
+        setIsLoadingSimilar(false);
+      }
+    };
+    loadSimilar();
+  }, [id]);
 
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -497,6 +520,65 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Similar Products Section */}
+        {similarProducts.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+              Similar Products
+            </h2>
+            {isLoadingSimilar ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {similarProducts.map((product: any) => {
+                  const productId = product.product_id || product.id;
+                  const name = product.name || product.title;
+                  const image = product.image_url || product.image || `https://picsum.photos/seed/similar${productId}/300/400`;
+                  const price = product.price;
+                  const rating = product.average_rating || product.rating || 0;
+
+                  return (
+                    <Link
+                      key={productId}
+                      to={`/product/${productId}`}
+                      className="group block bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 dark:border-gray-700"
+                    >
+                      <div className="aspect-w-3 aspect-h-4 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                        <img
+                          src={image}
+                          alt={name}
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {name}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-gray-900 dark:text-white">
+                            ${price}
+                          </span>
+                          {rating > 0 && (
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                              <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
+                                {Number(rating).toFixed(1)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

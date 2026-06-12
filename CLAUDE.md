@@ -23,7 +23,7 @@ Critical runtime dependencies (service A calls service B):
 - `customer-service` → `cart-service`: Auto-creates cart when customer is created
 - `order-service` → `pay-service` + `ship-service`: Orchestrates payment and shipment on order creation
 - `cart-service` → `product-service`: Validates product availability
-- `recommender-ai-service` → `product-service` + `comment-rate-service`: Aggregates data for recommendations
+- `recommender-ai-service` → `product-service` + `comment-rate-service` + `order-service` + `cart-service`: Multi-signal recommendation & chatbot
 - `order-service` → `product-service`: Fetches product details when creating orders
 
 These dependencies are reflected in `docker-compose.yml` via `depends_on` and service URLs in environment variables.
@@ -43,6 +43,7 @@ The API Gateway proxies these routes to respective services:
 - `/api/payments/` → pay-service
 - `/api/reviews/` → comment-rate-service
 - `/api/recommendations/` → recommender-ai-service
+- `/api/chat/` → recommender-ai-service (AI chatbot)
 
 The gateway also serves Django template-based admin UI at root paths like `/books/`, `/customers/`, `/orders/`.
 

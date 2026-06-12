@@ -22,6 +22,9 @@ SERVICES = {
     "recommendations": os.environ.get(
         "RECOMMENDER_SERVICE_URL", "http://recommender-ai-service:8888"
     ),
+    "chat": os.environ.get(
+        "RECOMMENDER_SERVICE_URL", "http://recommender-ai-service:8888"
+    ),
 }
 
 
@@ -93,10 +96,15 @@ def _proxy(request, service_url, path):
     content_type = request.META.get("CONTENT_TYPE", "")
     headers = {}
     if content_type:
+        # Đảm bảo charset=utf-8 để downstream service decode đúng tiếng Việt
+        if "json" in content_type and "charset" not in content_type.lower():
+            content_type = f"{content_type}; charset=utf-8"
         headers["Content-Type"] = content_type
     try:
+        # Tăng timeout lên 120s cho các request cần gọi LLM API (chat, recommendations)
+        timeout = 120 if "chat" in url or "recommendations" in url else 10
         resp = getattr(requests, method)(
-            url, data=raw_body, headers=headers, params=request.GET, timeout=10
+            url, data=raw_body, headers=headers, params=request.GET, timeout=timeout
         )
         if resp.status_code == 204 or not resp.content:
             return JsonResponse({}, status=resp.status_code)

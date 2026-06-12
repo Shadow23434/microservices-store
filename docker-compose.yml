@@ -165,12 +165,26 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/recommender_db
       PRODUCT_SERVICE_URL: http://product-service:8888
       COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8888
+      ORDER_SERVICE_URL: http://order-service:8888
+      CART_SERVICE_URL: http://cart-service:8888
+      # LLM Provider Configuration
+      LLM_PROVIDER: ${LLM_PROVIDER:-openrouter}
+      LLM_MODEL: ${LLM_MODEL:-meta-llama/llama-3.1-8b-instruct:free}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_SITE_URL: ${OPENROUTER_SITE_URL:-http://localhost}
+      OPENROUTER_APP_NAME: ${OPENROUTER_APP_NAME:-BookStore AI}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
       product-service:
         condition: service_started
       comment-rate-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      cart-service:
         condition: service_started
 
   api-gateway:
