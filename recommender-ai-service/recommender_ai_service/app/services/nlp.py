@@ -110,6 +110,11 @@ def extract_filters(message):
         "who", "whom", "how", "when", "where", "why", "all", "each", "every",
         "under", "over", "more", "less", "than", "between", "from", "to",
         "k", "thousand", "million", "m", "dollars", "dollar", "usd", "$",
+        # Greetings and conversational words (not product searches)
+        "hi", "hello", "hey", "thanks", "thank", "bye", "goodbye", "ok", "okay",
+        "good", "great", "nice", "awesome", "cool", "sure", "yes", "no",
+        "help", "tell", "about", "know", "think", "recommend", "suggest",
+        "xin", "chao", "cam", "on", "khong", "co", "vui", "long",
     ]
 
     # Exclude product_type keywords from keyword extraction

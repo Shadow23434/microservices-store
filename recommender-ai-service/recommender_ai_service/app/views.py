@@ -138,8 +138,16 @@ class ChatView(APIView):
             # 3. Extract filters from the question
             filters = nlp.extract_filters(message)
 
-            # 4. Find matching products
-            products = clients.search_products(filters)
+            # 4. Find matching products (skip if greeting/no meaningful filters)
+            msg_lower = message.lower().strip()
+            greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "xin chào", "chào"]
+            is_greeting = any(g in msg_lower for g in greetings)
+            has_filters = any(filters.get(k) for k in ("product_type", "category_id", "price_min", "price_max", "keywords"))
+
+            if is_greeting or not has_filters:
+                products = []
+            else:
+                products = clients.search_products(filters)
 
             # 5. Get chat history
             history = [
