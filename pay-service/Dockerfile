@@ -1,7 +1,7 @@
 FROM python:3.10-slim
 WORKDIR /app
-COPY pay-service/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY docker/wait_for_db.py .
-COPY pay-service/pay_service/ .
-CMD ["sh", "-c", "python wait_for_db.py && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8888"]
+COPY wait_for_db.py .
+COPY pay_service/ .
+CMD ["sh", "-c", "python wait_for_db.py && python manage.py migrate --noinput && gunicorn pay_service.wsgi:application --bind 0.0.0.0:8888 --workers 2 --timeout 120"]
