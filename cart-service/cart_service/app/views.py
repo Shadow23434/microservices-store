@@ -12,6 +12,13 @@ PRODUCT_SERVICE_URL = os.environ.get("PRODUCT_SERVICE_URL", "http://product-serv
 
 class CartCreate(APIView):
     def post(self, request):
+        # Prevent creating duplicate carts for the same customer
+        customer_id = request.data.get("customer_id")
+        if customer_id:
+            existing = Cart.objects.filter(customer_id=customer_id).first()
+            if existing:
+                serializer = CartSerializer(existing)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = CartSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -59,13 +66,12 @@ class AddCartItem(APIView):
 
 class ViewCart(APIView):
     def get(self, request, customer_id):
-        try:
-            # Lấy giỏ hàng theo customer_id
-            cart = Cart.objects.get(customer_id=customer_id)
-            items = CartItem.objects.filter(cart=cart)
-            serializer = CartItemSerializer(items, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Cart.DoesNotExist:
+        # Lấy giỏ hàng theo customer_id (lấy cái mới nhất nếu có nhiều)
+        cart = Cart.objects.filter(customer_id=customer_id).order_by('-id').first()
+        if not cart:
             return Response(
                 {"error": "Cart not found"}, status=status.HTTP_404_NOT_FOUND
             )
+        items = CartItem.objects.filter(cart=cart)
+        serializer = CartItemSerializer(items, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

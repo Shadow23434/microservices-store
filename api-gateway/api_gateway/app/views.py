@@ -134,13 +134,20 @@ class GatewayView(APIView):
         base_url = SERVICES[resource]
         # Build the path to forward to the backend service.
         # - product-service mounts at /api/products/...
-        # - All other services mount their endpoints at root (no service-name prefix)
-        #   e.g. catalog-service: /categories/, recommender: /recommendations/...
-        #   The gateway resource name (catalog, recommender) is NOT part of the backend path.
+        # - Other services keep the resource name as path prefix:
+        #   e.g. /api/recommendations/123/ → recommendations/123/
+        #        /api/carts/1/ → carts/1/
+        #        /api/orders/ → orders/
         if resource == "products":
             full_path = f"api/products/{path}" if path else "api/products/"
+        elif resource in ("recommendations", "recommender"):
+            # Recommender service routes: recommendations/<id>/, recommendations/similar/..., etc.
+            full_path = f"recommendations/{path}" if path else "recommendations/"
+        elif resource == "chat":
+            # Chat routes: chat/, chat/<id>/
+            full_path = f"chat/{path}" if path else "chat/"
         else:
-            full_path = path if path else ""
+            full_path = f"{resource}/{path}" if path else f"{resource}/"
         return _proxy(request, base_url, full_path)
 
     def get(self, request, resource, path=""):
